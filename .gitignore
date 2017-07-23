@@ -2,4 +2,5 @@
 *.log
 *.geany
 *.sublime-*
+models/
 ignore/
