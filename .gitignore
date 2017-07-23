@@ -1,0 +1,5 @@
+*~
+*.log
+*.geany
+*.sublime-*
+ignore/
