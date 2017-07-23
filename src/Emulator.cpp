@@ -7,13 +7,13 @@
 
 namespace casioemu
 {
-	Emulator::Emulator(std::string _model_path, Uint32 _timer_interval) : config(_model_path)
+	Emulator::Emulator(std::string _model_path, Uint32 _timer_interval, Uint32 _cycles_per_second) :
+		config(_model_path),
+		cycles(_cycles_per_second)
 	{
 		running = true;
 		timer_interval = _timer_interval;
 		model_path = _model_path;
-
-
 
 		window = SDL_CreateWindow(
 			config.model_name.c_str(),
@@ -25,6 +25,8 @@ namespace casioemu
 		);
 		if (!window)
 			Panic("SDL_CreateWindow failed: %s\n", SDL_GetError());
+
+		cycles.Reset();
 
 		SDL_AddTimer(timer_interval, TimerCallback, (void *)this);
 
@@ -60,7 +62,9 @@ namespace casioemu
 	{
 		Emulator *self = (Emulator *)param;
 
-		// printf("Timer callback\n");
+		Uint32 cycles_to_emulate = self->cycles.GetDelta();
+
+		printf("Timer callback, will emulate %u cycles\n", cycles_to_emulate);
 
 		return self->timer_interval;
 	}
@@ -118,6 +122,26 @@ namespace casioemu
 			if (config_file.fail())
 				Panic("config file failed to be read\n");
 		}
+	}
+
+	Emulator::Cycles::Cycles(Uint32 _cycles_per_second)
+	{
+		cycles_per_second = _cycles_per_second;
+	}
+
+	void Emulator::Cycles::Reset()
+	{
+		ticks_at_reset = SDL_GetTicks();
+		cycles_emulated = 0;
+	}
+
+	Uint32 Emulator::Cycles::GetDelta()
+	{
+		Uint32 ticks_now = SDL_GetTicks();
+		Uint32 cycles_to_have_been_emulated_by_now = (ticks_now - ticks_at_reset) / 1000.0 * cycles_per_second;
+		Uint32 diff = cycles_to_have_been_emulated_by_now - cycles_emulated;
+		cycles_emulated = cycles_to_have_been_emulated_by_now;
+		return diff;
 	}
 }
 
