@@ -27,10 +27,10 @@ namespace casioemu
 
 		struct Cycles
 		{
-			Cycles(Uint32 cycles_per_second);
+			Cycles(Uint64 cycles_per_second);
 			void Reset();
-			Uint32 GetDelta();
-			Uint32 ticks_at_reset, cycles_emulated, cycles_per_second;
+			Uint64 GetDelta();
+			Uint64 ticks_at_reset, cycles_emulated, cycles_per_second, performance_frequency;
 		} cycles;
 
 		void LoadInterfaceImage();
@@ -38,7 +38,7 @@ namespace casioemu
 	public:
 		Emulator(std::string model_path, Uint32 timer_interval = 20, Uint32 cycles_per_second = 32768);
 		~Emulator();
-		static Uint32 TimerCallback(Uint32 delay, void *param);
+		void TimerCallback();
 		bool Running();
 		void Shutdown();
 	};

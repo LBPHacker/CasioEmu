@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 
-#define MODEF_DEF_NAME "model.def"
+#define MODEL_DEF_NAME "model.def"
 
 namespace casioemu
 {
@@ -28,7 +28,11 @@ namespace casioemu
 
 		cycles.Reset();
 
-		SDL_AddTimer(timer_interval, TimerCallback, (void *)this);
+		SDL_AddTimer(timer_interval, [](Uint32 delay, void *param) {
+			Emulator *emulator = (Emulator *)param;
+			emulator->TimerCallback();
+			return emulator->timer_interval;
+		}, this);
 
 		window_surface = SDL_GetWindowSurface(window);
 
@@ -58,15 +62,11 @@ namespace casioemu
 	    SDL_FreeSurface(loaded_surface);
 	}
 
-	Uint32 Emulator::TimerCallback(Uint32 delay, void *param)
+	void Emulator::TimerCallback()
 	{
-		Emulator *self = (Emulator *)param;
+		Uint64 cycles_to_emulate = cycles.GetDelta();
 
-		Uint32 cycles_to_emulate = self->cycles.GetDelta();
-
-		printf("Timer callback, will emulate %u cycles\n", cycles_to_emulate);
-
-		return self->timer_interval;
+		printf("Timer callback, will emulate %lu cycles\n", cycles_to_emulate);
 	}
 
 	bool Emulator::Running()
@@ -81,7 +81,7 @@ namespace casioemu
 
 	Emulator::Config::Config(std::string model_path)
 	{
-		std::ifstream config_file(model_path + "/" + MODEF_DEF_NAME);
+		std::ifstream config_file(model_path + "/" + MODEL_DEF_NAME);
 		if (!config_file.is_open())
 			Panic("fopen failed: %s\n", strerror(errno));
 
@@ -124,22 +124,23 @@ namespace casioemu
 		}
 	}
 
-	Emulator::Cycles::Cycles(Uint32 _cycles_per_second)
+	Emulator::Cycles::Cycles(Uint64 _cycles_per_second)
 	{
 		cycles_per_second = _cycles_per_second;
+		performance_frequency = SDL_GetPerformanceFrequency();
 	}
 
 	void Emulator::Cycles::Reset()
 	{
-		ticks_at_reset = SDL_GetTicks();
+		ticks_at_reset = SDL_GetPerformanceCounter();
 		cycles_emulated = 0;
 	}
 
-	Uint32 Emulator::Cycles::GetDelta()
+	Uint64 Emulator::Cycles::GetDelta()
 	{
-		Uint32 ticks_now = SDL_GetTicks();
-		Uint32 cycles_to_have_been_emulated_by_now = (ticks_now - ticks_at_reset) / 1000.0 * cycles_per_second;
-		Uint32 diff = cycles_to_have_been_emulated_by_now - cycles_emulated;
+		Uint64 ticks_now = SDL_GetPerformanceCounter();
+		Uint64 cycles_to_have_been_emulated_by_now = (double)(ticks_now - ticks_at_reset) / performance_frequency * cycles_per_second;
+		Uint64 diff = cycles_to_have_been_emulated_by_now - cycles_emulated;
 		cycles_emulated = cycles_to_have_been_emulated_by_now;
 		return diff;
 	}
