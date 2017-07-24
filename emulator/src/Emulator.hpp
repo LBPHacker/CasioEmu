@@ -34,11 +34,11 @@ namespace casioemu
 		} cycles;
 
 		void LoadInterfaceImage();
+		void TimerCallback();
 
 	public:
-		Emulator(std::string model_path, Uint32 timer_interval = 20, Uint32 cycles_per_second = 32768);
+		Emulator(std::string model_path, Uint32 timer_interval, Uint32 cycles_per_second);
 		~Emulator();
-		void TimerCallback();
 		bool Running();
 		void Shutdown();
 	};

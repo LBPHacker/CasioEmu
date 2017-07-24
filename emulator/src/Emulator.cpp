@@ -3,8 +3,6 @@
 #include <iostream>
 #include <fstream>
 
-#define MODEL_DEF_NAME "model.def"
-
 namespace casioemu
 {
 	Emulator::Emulator(std::string _model_path, Uint32 _timer_interval, Uint32 _cycles_per_second) :
@@ -24,7 +22,7 @@ namespace casioemu
 			SDL_WINDOW_SHOWN
 		);
 		if (!window)
-			Panic("SDL_CreateWindow failed: %s\n", SDL_GetError());
+			PANIC("SDL_CreateWindow failed: %s\n", SDL_GetError());
 
 		cycles.Reset();
 
@@ -53,11 +51,11 @@ namespace casioemu
 	{
 	    SDL_Surface *loaded_surface = IMG_Load((model_path + "/" + config.interface_image_path).c_str());
 	    if (!loaded_surface)
-	    	Panic("IMG_Load failed: %s\n", IMG_GetError());
+	    	PANIC("IMG_Load failed: %s\n", IMG_GetError());
 
 	    interface_image_surface = SDL_ConvertSurface(loaded_surface, window_surface->format, 0);
 	    if (!interface_image_surface)
-	    	Panic("SDL_ConvertSurface failed: %s\n", SDL_GetError());
+	    	PANIC("SDL_ConvertSurface failed: %s\n", SDL_GetError());
 
 	    SDL_FreeSurface(loaded_surface);
 	}
@@ -83,7 +81,7 @@ namespace casioemu
 	{
 		std::ifstream config_file(model_path + "/" + MODEL_DEF_NAME);
 		if (!config_file.is_open())
-			Panic("fopen failed: %s\n", strerror(errno));
+			PANIC("fopen failed: %s\n", strerror(errno));
 
 		while (!config_file.eof())
 		{
@@ -120,7 +118,7 @@ namespace casioemu
 			}
 
 			if (config_file.fail())
-				Panic("config file failed to be read\n");
+				PANIC("config file failed to be read\n");
 		}
 	}
 

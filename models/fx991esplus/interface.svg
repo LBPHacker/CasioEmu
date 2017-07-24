@@ -28,9 +28,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.4142137"
-     inkscape:cx="110.64221"
-     inkscape:cy="370.53677"
+     inkscape:zoom="8.0000008"
+     inkscape:cx="209.68402"
+     inkscape:cy="305.52886"
      inkscape:document-units="px"
      inkscape:current-layer="layer4"
      showgrid="true"
@@ -38,7 +38,7 @@
      inkscape:snap-global="false"
      inkscape:window-width="1280"
      inkscape:window-height="974"
-     inkscape:window-x="0"
+     inkscape:window-x="1280"
      inkscape:window-y="0"
      inkscape:window-maximized="1">
     <inkscape:grid
@@ -1624,7 +1624,7 @@
          height="2.0420291"
          width="5.2077413"
          id="rect6291"
-         style="opacity:1;fill:#615023;fill-opacity:1;stroke:#615023;stroke-width:0.80000001;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+         style="opacity:1;fill:none;fill-opacity:1;stroke:#615023;stroke-width:0.80000001;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
       <path
          style="fill:none;fill-rule:evenodd;stroke:#615023;stroke-width:0.80000001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          d="m 44.837311,265.76852 8.6875,0"
@@ -1684,7 +1684,9 @@
          height="2.0413532"
          width="4.9243565"
          id="rect6335"
-         style="opacity:1;fill:#615023;fill-opacity:1;stroke:#615023;stroke-width:0.80000001;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+         style="opacity:1;fill:none;fill-opacity:1;stroke:#615023;stroke-width:0.80000001;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         inkscape:export-xdpi="90"
+         inkscape:export-ydpi="90" />
       <text
          xml:space="preserve"
          style="font-style:normal;font-weight:normal;font-size:7.50410318px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#615023;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"

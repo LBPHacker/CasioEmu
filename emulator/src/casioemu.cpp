@@ -5,9 +5,6 @@
 
 #include "Emulator.hpp"
 
-
-
-
 int main(int argc, char *argv[])
 {
 	if (argc < 2)
@@ -17,18 +14,18 @@ int main(int argc, char *argv[])
 	}
 
 	if (SDL_Init(SDL_INIT_VIDEO & SDL_INIT_TIMER) < 0)
-		Panic("SDL_Init failed: %s\n", SDL_GetError());
+		PANIC("SDL_Init failed: %s\n", SDL_GetError());
 
 	int imgFlags = IMG_INIT_PNG;
 	if (!(IMG_Init(imgFlags) & imgFlags))
-		Panic("IMG_Init failed: %s\n", IMG_GetError());
+		PANIC("IMG_Init failed: %s\n", IMG_GetError());
 
-	casioemu::Emulator emulator(argv[1]);
+	casioemu::Emulator emulator(argv[1], 20, 32768);
 	while (emulator.Running())
 	{
 		SDL_Event event;
 		if (!SDL_WaitEvent(&event))
-			Panic("SDL_WaitEvent failed: %s\n", SDL_GetError());
+			PANIC("SDL_WaitEvent failed: %s\n", SDL_GetError());
 
 		switch (event.type)
 		{
@@ -47,6 +44,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	IMG_Quit();
 	SDL_Quit();
 	return 0;
 }
