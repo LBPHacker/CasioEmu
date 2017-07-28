@@ -79,6 +79,9 @@ namespace casioemu
 
 	Emulator::Config::Config(std::string model_path)
 	{
+		// * Ugly config parser function.
+		// * TODO: Maybe replace the whole thing with a smart map.
+
 		std::ifstream config_file(model_path + "/" + MODEL_DEF_NAME);
 		if (!config_file.is_open())
 			PANIC("fopen failed: %s\n", strerror(errno));

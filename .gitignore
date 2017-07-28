@@ -4,3 +4,4 @@
 *.sublime-*
 models/*/*.bin
 ignore/
+test/
