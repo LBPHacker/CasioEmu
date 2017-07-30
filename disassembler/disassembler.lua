@@ -4,8 +4,26 @@ if not bit then
 	bit = require("bit32")
 end
 
+local args_assoc = {
+	input = "/dev/stdin",
+	output = "/dev/stdout",
+	entry = "",
+	compliment_entries = false,
+	strict = false,
+	addresses = false
+}
+
+for ix, arg in next, {...} do
+	local key, value = arg:match("^([^=]+)=(.+)$")
+	if key then
+		args_assoc[key] = value
+	else
+		args_assoc.input = arg
+	end
+end
+
 local GLOBAL_LABEL_FORMAT = "f_%05X"
-local LOCAL_LABEL_FORMAT = ".l_%i"
+local LOCAL_LABEL_FORMAT = ".l_%03X"
 
 local function print(thing, ...)
 	io.stderr:write(tostring(thing))
@@ -27,18 +45,11 @@ local function panic(...)
 	os.exit(1)
 end
 
-local args_assoc = {
-	input = "/dev/stdin",
-	output = "/dev/stdout",
-	entry = "",
-	addresses = false
-}
-for ix, arg in next, {...} do
-	local key, value = arg:match("^([^=]+)=(.+)$")
-	if key then
-		args_assoc[key] = value
-	else
-		args_assoc.input = arg
+local function panic2(...)
+	io.stderr:write("PANIC: ")
+	printf(...)
+	if args_assoc.strict then
+		os.exit(1)
 	end
 end
 
@@ -110,25 +121,25 @@ end
 
 local instruction_source = {
 	{{  "add", {    "r",  8, 0x000F}, {    "r",  4,  0x000F}                      }, 0x8001, false, 0},
-	{{  "add", {    "r",  8, 0x000F}, {   "im",  0, -0x00FF}                      }, 0x1000, false, 0},
+	{{  "add", {    "r",  8, 0x000F}, {   "im",  0,  0x00FF}                      }, 0x1000, false, 0},
 	{{  "add", {   "er",  8, 0x000E}, {   "er",  4,  0x000E}                      }, 0xF006, false, 0},
 	{{  "add", {   "er",  8, 0x000E}, {   "im",  0, -0x007F}                      }, 0xE080, false, 0},
 	{{ "addc", {    "r",  8, 0x000F}, {    "r",  4,  0x000F}                      }, 0x8006, false, 0},
-	{{ "addc", {    "r",  8, 0x000F}, {   "im",  0, -0x00FF}                      }, 0x6000, false, 0},
+	{{ "addc", {    "r",  8, 0x000F}, {   "im",  0,  0x00FF}                      }, 0x6000, false, 0},
 	{{  "and", {    "r",  8, 0x000F}, {    "r",  4,  0x000F}                      }, 0x8002, false, 0},
-	{{  "and", {    "r",  8, 0x000F}, {   "im",  0, -0x00FF}                      }, 0x2000, false, 0},
+	{{  "and", {    "r",  8, 0x000F}, {   "im",  0,  0x00FF}                      }, 0x2000, false, 0},
 	{{  "cmp", {    "r",  8, 0x000F}, {    "r",  4,  0x000F}                      }, 0x8007, false, 0},
-	{{  "cmp", {    "r",  8, 0x000F}, {   "im",  0, -0x00FF}                      }, 0x7000, false, 0},
+	{{  "cmp", {    "r",  8, 0x000F}, {   "im",  0,  0x00FF}                      }, 0x7000, false, 0},
 	{{ "cmpc", {    "r",  8, 0x000F}, {    "r",  4,  0x000F}                      }, 0x8005, false, 0},
-	{{ "cmpc", {    "r",  8, 0x000F}, {   "im",  0, -0x00FF}                      }, 0x5000, false, 0},
+	{{ "cmpc", {    "r",  8, 0x000F}, {   "im",  0,  0x00FF}                      }, 0x5000, false, 0},
 	{{  "mov", {   "er",  8, 0x000E}, {   "er",  4,  0x000E}                      }, 0xF005, false, 0},
 	{{  "mov", {   "er",  8, 0x000E}, {   "im",  0, -0x007F}                      }, 0xE000, false, 0},
 	{{  "mov", {    "r",  8, 0x000F}, {    "r",  4,  0x000F}                      }, 0x8000, false, 0},
-	{{  "mov", {    "r",  8, 0x000F}, {   "im",  0, -0x00FF}                      }, 0x0000, false, 0},
+	{{  "mov", {    "r",  8, 0x000F}, {   "im",  0,  0x00FF}                      }, 0x0000, false, 0},
 	{{   "or", {    "r",  8, 0x000F}, {    "r",  4,  0x000F}                      }, 0x8003, false, 0},
-	{{   "or", {    "r",  8, 0x000F}, {   "im",  0, -0x00FF}                      }, 0x3000, false, 0},
+	{{   "or", {    "r",  8, 0x000F}, {   "im",  0,  0x00FF}                      }, 0x3000, false, 0},
 	{{  "xor", {    "r",  8, 0x000F}, {    "r",  4,  0x000F}                      }, 0x8004, false, 0},
-	{{  "xor", {    "r",  8, 0x000F}, {   "im",  0, -0x00FF}                      }, 0x4000, false, 0},
+	{{  "xor", {    "r",  8, 0x000F}, {   "im",  0,  0x00FF}                      }, 0x4000, false, 0},
 	{{  "cmp", {   "er",  8, 0x000E}, {   "er",  4,  0x000E}                      }, 0xF007, false, 0},
 	{{  "sub", {    "r",  8, 0x000F}, {    "r",  4,  0x000F}                      }, 0x8008, false, 0},
 	{{ "subc", {    "r",  8, 0x000F}, {    "r",  4,  0x000F}                      }, 0x8009, false, 0},
@@ -363,7 +374,7 @@ local function disassemble(segment, address)
 	local fetch_addr = address
 	if instruction_by_address[full_address] then
 		if instruction_by_address[full_address].head then
-			panic("disassemble: requesting tail at %01X:%04X", segment, address)
+			panic("disassemble: requesting tail at %01X:%04X", bit.rshift(segment, 16), address)
 		end
 		return instruction_by_address[full_address], true
 	end
@@ -396,7 +407,7 @@ local function disassemble(segment, address)
 		if result then
 			if result.mnemonic == "dsr" then
 				if dsr then
-					panic("disassemble: double dsr at %01X:%04X", segment, address)
+					panic("disassemble: double dsr at %01X:%04X", bit.rshift(segment, 16), address)
 				end
 				dsr = result.params[1]
 				opcode = false
@@ -474,17 +485,57 @@ local function make_streak()
 	}
 end
 
+local image_iterator
+do
+	local function image_next(st, address)
+		if address >= st.length then
+			return
+		end
+		local instr = st.store[address]
+		local next_address
+		if instr then
+			next_address = address + instr.length
+		else
+			next_address = address + 2
+		end
+		return next_address, address, instr, st.label[address]
+	end
+
+	function image_iterator()
+		return image_next, {
+			length = binary_source_length,
+			store = instruction_by_address,
+			label = label_by_address
+		}, 0
+	end
+end
+
 print("Disassembling...")
 local to_disassemble = {}
-for entry in args_assoc.entry:gmatch("[^,]+") do
-	local entry_ord = tonumber(entry)
-	if not entry_ord then
-		panic("invalid entry ordinal %s", entry)
+do
+	local entry_ords_in = {}
+	for entry in args_assoc.entry:gmatch("[^,]+") do
+		local entry_ord = tonumber(entry)
+		if not entry_ord then
+			panic("invalid entry ordinal %s", entry)
+		end
+		entry_ords_in[entry_ord] = true
 	end
-	local address = fetch(math.floor(2 * entry_ord))
-	local new_streak = make_streak()
-	local label_obj = add_label(new_streak, address)
-	to_disassemble[{0, address, new_streak}] = true
+	if args_assoc.compliment_entries then
+		for entry_ord = 1, 127 do
+			entry_ords_in[entry_ord] = not entry_ords_in[entry_ord] and true or nil
+		end
+	end
+	for entry_ord in next, entry_ords_in do
+		local address = fetch(math.floor(2 * entry_ord))
+		if address % 2 == 0 then
+			local new_streak = make_streak()
+			local label_obj = add_label(new_streak, address)
+			to_disassemble[{0, address, new_streak}] = true
+		else
+			printf("ignoring entry %s (%04X)", entry_ord, address)
+		end
+	end
 end
 
 local resolve_variable_branch
@@ -630,13 +681,18 @@ while next(to_disassemble) do
 		local new_to_disassemble = {}
 		for address_tuple in next, to_disassemble do
 			local segment, address, streak = unpack(address_tuple)
+			if segment + address >= binary_source_length then
+				panic2("runloop: out of data at %01X:%04X", bit.rshift(segment, 16), address)
+				break
+			end
 			while true do
 				local instr, seen = disassemble(segment, address)
 				if seen then
 					break
 				end
 				if instr.mnemonic == "?" then
-					panic("runloop: unknown instruction at %01X:%04X", segment, address)
+					panic2("runloop: unknown instruction at %01X:%04X", bit.rshift(segment, 16), address)
+					break
 				end
 				address = bit.band(address + instr.length, 0xFFFF)
 				if  instr.mnemonic == "rt"
@@ -694,32 +750,9 @@ while next(to_disassemble) do
 		end
 	end
 end
+print("  Done.")
 
-local image_iterator
-do
-	local function image_next(st, address)
-		if address >= st.length then
-			return
-		end
-		local instr = st.store[address]
-		local next_address
-		if instr then
-			next_address = address + instr.length
-		else
-			next_address = address + 2
-		end
-		return next_address, address, instr, st.label[address]
-	end
-
-	function image_iterator()
-		return image_next, {
-			length = binary_source_length,
-			store = instruction_by_address,
-			label = label_by_address
-		}, 0
-	end
-end
-
+print("Discovering contexts...")
 do
 	local function make_streak_friends(one, other)
 		if other.streak ~= one.streak then
@@ -767,12 +800,35 @@ do
 				end
 				streaks_to_check = new_streaks_to_check
 			end
-			local new_context = {
-				local_label_counter = 0
-			}
+			local new_context = {}
 			for streak in next, friend_streaks do
 				streak.context = new_context
 			end
+		end
+	end
+end
+for next_address, address, instr, label in image_iterator() do
+	if label then
+		label.context = label.streak.context
+		label.streak = nil
+	end
+end
+do
+	local contexts_seen = {}
+	local rewrite_from, rewrite_to
+	local last_label
+	for next_address, address, instr, label in image_iterator() do
+		if label then
+			if last_label and label.context ~= last_label.context and contexts_seen[label.context] then
+				if label.context ~= rewrite_from then
+					rewrite_from, rewrite_to = label.context, {}
+				end
+				label.context = rewrite_to
+			else
+				rewrite_from = nil
+			end
+			contexts_seen[label.context] = true
+			last_label = label
 		end
 	end
 end
@@ -781,13 +837,11 @@ do
 	for next_address, address, instr, label in image_iterator() do
 		if label then
 			last_label = label
-			label.context = label.streak.context
-			label.streak = nil
 			if label.context.name then
-				label.context.local_label_counter = label.context.local_label_counter + 1
-				label.name = LOCAL_LABEL_FORMAT:format(label.context.local_label_counter)
+				label.name = LOCAL_LABEL_FORMAT:format(label.address - label.context.head.address)
 			else
 				label.context.name = label.name
+				label.context.head = label
 				label.context_head = true
 			end
 		end
@@ -797,7 +851,43 @@ do
 		end
 	end
 end
+print("  Done.")
 
+if args_assoc.names then
+	print("Renaming...")
+	local handle = io.open(args_assoc.names, "r")
+	if not handle then
+		panic("Failed to open \"%i\"", args_assoc.names)
+	end
+	local name_content = handle:read("*a")
+	handle:close()
+	local raw_to_real = {}
+	local last_global_label
+	for line in name_content:gmatch("[^\n]+") do
+		local raw, real = line:match("([%w_%.]+)%s+([%w_%.]+)")
+		if raw then
+			if raw:find("^%.") then
+				if not last_global_label then
+					panic("rename: fix that rename list pls")
+				end
+				raw_to_real[last_global_label .. raw] = real
+			else
+				last_global_label = raw
+				raw_to_real[raw] = real
+			end
+		end
+	end
+	for address, label in next, label_by_address do
+		local raw = label.name:find("^%.") and (label.context.name .. label.name) or label.name
+		local real = raw_to_real[raw]
+		if real then
+			label.name = real
+		end
+	end
+	print("  Done.")
+end
+
+print("Writing...")
 local handle = io.open(args_assoc.output, "w")
 if not handle then
 	panic("Failed to open \"%i\"", args_assoc.output)
