@@ -3,7 +3,6 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <lua5.1/lua.hpp>
 
 namespace casioemu
 {
