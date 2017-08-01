@@ -4,6 +4,7 @@
 #include <map>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <lua5.3/lua.hpp>
 
 #include "Config.hpp"
 
@@ -17,20 +18,7 @@ namespace casioemu
 		bool running;
 		Uint32 last_frame_tick_count;
 		std::string model_path;
-
-		/*
-		 * The internal structure used for holding all configuration parameters.
-		 * Right now it's a pretty simple thing, with all config parameters
-		 * implemented as actual members of the type. While this is convenient,
-		 * it makes the config parsing function incredibly ugly. I might replace
-		 * this with a smart map later.
-		 */
-		struct Config
-		{
-			Config(std::string model_path);
-			std::string interface_image_path, rom_path, model_name;
-			int interface_width, interface_height;
-		} config;
+		lua_State *lua_state;
 
 		/*
 		 * The cycle manager structure. This structure is reset every time the
@@ -47,8 +35,20 @@ namespace casioemu
 			Uint64 ticks_at_reset, cycles_emulated, cycles_per_second, performance_frequency;
 		} cycles;
 
+		struct ModelInfo
+		{
+			ModelInfo(Emulator *emulator, std::string key);
+			Emulator *emulator;
+			std::string key;
+
+			operator std::string();
+			operator int();
+		};
+
+		void LoadModelDefition();
 		void LoadInterfaceImage();
 		void TimerCallback();
+		ModelInfo GetModelInfo(std::string key);
 
 	public:
 		Emulator(std::string model_path, Uint32 timer_interval, Uint32 cycles_per_second);
