@@ -791,7 +791,7 @@ while next(to_disassemble) do
 					local td_segment = instr.dsr and instr.dsr[1] or 0
 					-- * TODO: uhh... what if dsr is dsr?
 					for ix = 1, #instr.params do
-						if instr.params[ix][2] == "im" and instr.params[ix][1] >= 0x100 then
+						if instr.params[ix][2] == "im" and instr.params[ix][1] >= 0x100 and instr.params[ix][1] < 0xFF00 then
 							local td_address = instr.params[ix][1]
 							local label_obj = add_data_label(td_segment + td_address, instr)
 							instr.params[ix] = {label_obj, "dlab"}
@@ -1011,6 +1011,9 @@ do
 			for ix = 1, #instr.params do
 				-- if instr.offsetable ~= 0 and instr.offsetable == ix - 1 and instr.params[ix][2] == "im" then
 				if instr.offsetable ~= 0 and instr.offsetable == ix - 1 and (instr.params[ix][2] == "dlab" or instr.params[ix][2] == "im") then
+					if instr.params[ix][2] == "im" and instr.params[ix][1] >= 0xFF00 then
+						instr.params[ix][1] = instr.params[ix][1] - 0x10000
+					end
 					out_body[#out_body] = formats[instr.params[ix][2]]:format(instr.params[ix][1], instr) .. out_body[#out_body]
 				else
 					local paramtbl = {}
