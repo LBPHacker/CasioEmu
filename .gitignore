@@ -3,5 +3,6 @@
 *.geany
 *.sublime-*
 models/*/*.bin
+models/*/*.asm
 ignore/
 test/

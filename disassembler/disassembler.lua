@@ -148,12 +148,12 @@ do
 		{{  "sll", {   "r",  8, 0x000F}, {  "im",  4,  0x0007}                     }, 0x900A, false, 0},
 		{{ "sllc", {   "r",  8, 0x000F}, {   "r",  4,  0x000F}                     }, 0x800B, false, 0},
 		{{ "sllc", {   "r",  8, 0x000F}, {  "im",  4,  0x0007}                     }, 0x900B, false, 0},
-		{{  "sra", {   "r",  8, 0x000F}, {   "r",  4,  0x000F}                     }, 0x800C, false, 0},
-		{{  "sra", {   "r",  8, 0x000F}, {  "im",  4,  0x0007}                     }, 0x900C, false, 0},
-		{{  "srl", {   "r",  8, 0x000F}, {   "r",  4,  0x000F}                     }, 0x800D, false, 0},
-		{{  "srl", {   "r",  8, 0x000F}, {  "im",  4,  0x0007}                     }, 0x900D, false, 0},
-		{{ "srlc", {   "r",  8, 0x000F}, {   "r",  4,  0x000F}                     }, 0x800E, false, 0},
-		{{ "srlc", {   "r",  8, 0x000F}, {  "im",  4,  0x0007}                     }, 0x900E, false, 0},
+		{{  "sra", {   "r",  8, 0x000F}, {   "r",  4,  0x000F}                     }, 0x800E, false, 0},
+		{{  "sra", {   "r",  8, 0x000F}, {  "im",  4,  0x0007}                     }, 0x900E, false, 0},
+		{{  "srl", {   "r",  8, 0x000F}, {   "r",  4,  0x000F}                     }, 0x800C, false, 0},
+		{{  "srl", {   "r",  8, 0x000F}, {  "im",  4,  0x0007}                     }, 0x900C, false, 0},
+		{{ "srlc", {   "r",  8, 0x000F}, {   "r",  4,  0x000F}                     }, 0x800D, false, 0},
+		{{ "srlc", {   "r",  8, 0x000F}, {  "im",  4,  0x0007}                     }, 0x900D, false, 0},
 		{{    "l", {  "er",  8, 0x000E}, {  "ea",  0,  0x0000}                     }, 0x9032, false, 2},
 		{{    "l", {  "er",  8, 0x000E}, { "eap",  0,  0x0000}                     }, 0x9052, false, 2},
 		{{    "l", {  "er",  8, 0x000E}, {  "er",  4,  0x000E}                     }, 0x9002, false, 2},
@@ -848,19 +848,19 @@ do
 			end
 		end
 	end
-	local seen_streak = {}
 	for streak in next, streaks do
-		if not seen_streak[streak] then
+		if not streak.seen then
 			local friend_streaks = {}
 			local streaks_to_check = {[streak] = true}
+			streak.seen = true
 			while next(streaks_to_check) do
 				local new_streaks_to_check = {}
 				for next_streak in next, streaks_to_check do
-					seen_streak[next_streak] = true
 					friend_streaks[next_streak] = true
-					for friend_streak in next, streak.friends do
-						if not seen_streak[friend_streak] then
+					for friend_streak in next, next_streak.friends do
+						if not friend_streak.seen then
 							new_streaks_to_check[friend_streak] = true
+							friend_streak.seen = true
 						end
 					end
 				end
