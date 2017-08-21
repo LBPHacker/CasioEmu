@@ -1,10 +1,5 @@
 #! /usr/bin/env luajit
 
--- bit32 seems to not work... weird
--- if not bit then
--- 	bit = require("bit32")
--- end
-
 local args_assoc = {
 	input = "/dev/stdin",
 	output = "/dev/stdout",
@@ -573,24 +568,36 @@ do
 	end
 
 	function resolve_variable_branch(bl_instr, new_to_disassemble, streak)
-		local call_reg = bl_instr.params[1][1]
+		--[[
+		cmp A, B
+		cmpc A, B
+		bc A
+		b A
+		(
+		cmp A, B
+		cmpc A, B
+		bc A
+		b A
+		)?
+		(
+		add A, B
+		addc A, B
+		)?
+		sllc A
+		sll A
+		l A, (B:)?C[D]
+		]]
 
 		local l_instr = prev_instr(bl_instr)
 		if not instruction_match(l_instr, "l") then
 			return
 		end
-		local map_segment = 0
 		if l_instr.dsr then
-			if l_instr.dsr[2] ~= "im" then
-				return
-			end
-			-- * TODO: uhh... what if dsr is dsr?
-			map_segment = bit.lshift(l_instr.dsr[1], 16)
+			return
 		end
 		if not l_instr.params[3] or l_instr.params[3][2] ~= "dlab" then
 			return
 		end
-		-- local map_base = l_instr.params[3][1]
 		local map_base = l_instr.params[3][1].address
 
 		local sll_instr = prev_instr(l_instr)
@@ -664,9 +671,6 @@ do
 		if cmp_1 then
 			cmp_value[1] = cmp_1.params[2][1] + bit.lshift(cmpc_1.params[2][1], 8)
 			cmp_cond[1] = branch_1.params[1][1]
-		-- else
-		-- 	cmp_value[1] = 0
-		-- 	cmp_cond[1] = 0 -- * GE
 		end
 		cmp_value[2] = cmp_2.params[2][1] + bit.lshift(cmpc_2.params[2][1], 8)
 		cmp_cond[2] = branch_3.params[1][1]
@@ -712,10 +716,8 @@ do
 
 		add_comment(bl_instr.address, "Jump table")
 		local td_segment = bit.band(bl_instr.address, 0xF0000)
-		-- printf("===== %05X", bl_instr.address)
 		for ix = min, max do
-			local td_address = fetch(map_segment + bit.band(map_base + ix * 2, 0xFFFF))
-			-- printf("request %05X", td_address + td_address)
+			local td_address = fetch(bit.band(map_base + ix * 2, 0xFFFF))
 			new_to_disassemble[{td_segment, td_address, streak}] = true
 			local label_obj = add_label(streak, td_segment + td_address, bl_instr)
 			add_jt_comment(bl_instr.address, ix, label_obj)
@@ -789,7 +791,6 @@ while next(to_disassemble) do
 				or instr.mnemonic == "rb")
 				and (not instr.dsr or (instr.dsr and instr.dsr[2] == "im")) then
 					local td_segment = instr.dsr and instr.dsr[1] or 0
-					-- * TODO: uhh... what if dsr is dsr?
 					for ix = 1, #instr.params do
 						if instr.params[ix][2] == "im" and instr.params[ix][1] >= 0x100 and instr.params[ix][1] < 0xFF00 then
 							local td_address = instr.params[ix][1]
@@ -809,9 +810,7 @@ while next(to_disassemble) do
 	for instr, streak in next, variable_branches do
 		local segment = bit.band(instr.address, 0xF0000)
 		local address = bit.band(instr.address,  0xFFFF)
-		if resolve_variable_branch(instr, to_disassemble, streak) then
-			-- printf("runloop: resolved variable branch at %01X:%04X", segment, address)
-		else
+		if not resolve_variable_branch(instr, to_disassemble, streak) then
 			printf("runloop: failed to resolve variable branch at %01X:%04X", bit.rshift(segment, 16), address)
 			add_comment(instr.address, "Failed to resolve variable branch")
 		end
@@ -1009,7 +1008,6 @@ do
 		if instr then
 			table.insert(out_head, instr.mnemonic)
 			for ix = 1, #instr.params do
-				-- if instr.offsetable ~= 0 and instr.offsetable == ix - 1 and instr.params[ix][2] == "im" then
 				if instr.offsetable ~= 0 and instr.offsetable == ix - 1 and (instr.params[ix][2] == "dlab" or instr.params[ix][2] == "im") then
 					if instr.params[ix][2] == "im" and instr.params[ix][1] >= 0xFF00 then
 						instr.params[ix][1] = instr.params[ix][1] - 0x10000
