@@ -3,6 +3,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define PANIC(...) (printf("%s:%i: ", __FILE__, __LINE__), printf(__VA_ARGS__), exit(1))
+#define PANIC(...) (printf("%s:%i: in %s: ", __FILE__, __LINE__, __func__), printf(__VA_ARGS__), exit(1))
 #define MODEL_DEF_NAME "model.def"
+
+#define PL_ROMWINDOW_BASE 0x0000
+#define PL_ROMWINDOW_SIZE 0x8000
+
+#define PL_BATTERYBACKEDRAM_BASE 0x8000
+#define PL_BATTERYBACKEDRAM_SIZE 0x0E00
 

@@ -1,12 +1,14 @@
 #include "Emulator.hpp"
 
+#include "Chipset.hpp"
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
 
 namespace casioemu
 {
-	Emulator::Emulator(std::string _model_path, Uint32 _timer_interval, Uint32 _cycles_per_second) : cycles(_cycles_per_second)
+	Emulator::Emulator(std::string _model_path, Uint32 _timer_interval, Uint32 _cycles_per_second) : cycles(_cycles_per_second), chipset(*new Chipset(*this))
 	{
 		running = true;
 		timer_interval = _timer_interval;
@@ -28,6 +30,8 @@ namespace casioemu
 		if (!window)
 			PANIC("SDL_CreateWindow failed: %s\n", SDL_GetError());
 
+		chipset.SetupInternals();
+
 		window_surface = SDL_GetWindowSurface(window);
 
 		LoadInterfaceImage();
@@ -38,19 +42,25 @@ namespace casioemu
 
 		cycles.Reset();
 
-		SDL_AddTimer(timer_interval, [](Uint32 delay, void *param) {
+		timer_id = SDL_AddTimer(timer_interval, [](Uint32 delay, void *param) {
 			Emulator *emulator = (Emulator *)param;
 			emulator->TimerCallback();
 			return emulator->timer_interval;
 		}, this);
+
+		chipset.Reset();
 	}
 
 	Emulator::~Emulator()
 	{
+		SDL_RemoveTimer(timer_id);
+
 	    SDL_FreeSurface(interface_image_surface);
 		SDL_DestroyWindow(window);
 
+		luaL_unref(lua_state, LUA_REGISTRYINDEX, lua_model_ref);
 		lua_close(lua_state);
+		delete &chipset;
 	}
 
 	void Emulator::LoadModelDefition()
@@ -61,31 +71,28 @@ namespace casioemu
 		if (lua_pcall(lua_state, 0, 1, 0) != LUA_OK)
 			PANIC("LoadModelDefition failed: %s\n", lua_tostring(lua_state, -1));
 
-		lua_setglobal(lua_state, "model");
+		lua_model_ref = luaL_ref(lua_state, LUA_REGISTRYINDEX);
 	}
 
 	Emulator::ModelInfo Emulator::GetModelInfo(std::string key)
 	{
-		return ModelInfo(this, key);
+		return ModelInfo(*this, key);
 	}
 
-	Emulator::ModelInfo::ModelInfo(Emulator *_emulator, std::string _key)
+	Emulator::ModelInfo::ModelInfo(Emulator &_emulator, std::string _key) : emulator(_emulator)
 	{
-		emulator = _emulator;
 		key = _key;
 	}
 
 	Emulator::ModelInfo::operator std::string()
 	{
-		lua_getglobal(emulator->lua_state, "model");
-		lua_getfield(emulator->lua_state, -1, key.c_str());
-		const char *value = lua_tostring(emulator->lua_state, -1);
+		lua_rawgeti(emulator.lua_state, LUA_REGISTRYINDEX, emulator.lua_model_ref);
+		lua_getfield(emulator.lua_state, -1, key.c_str());
+		const char *value = lua_tostring(emulator.lua_state, -1);
 		if (!value)
-			value = "nil";
-		std::string result(value);
-		lua_pop(emulator->lua_state, 1);
-		printf("%s\n", result.c_str());
-		return result;
+			PANIC("ModelInfo::operator std::string failed: key '%s' is not defined\n", key.c_str());
+		lua_pop(emulator.lua_state, 1);
+		return std::string(value);
 	}
 
 	Emulator::ModelInfo::operator int()
@@ -94,12 +101,14 @@ namespace casioemu
 		std::stringstream ss;
 		ss << std::string(*this);
 		ss >> result;
+		if (ss.fail())
+			PANIC("ModelInfo::operator int failed: key '%s' is not convertible to int\n", key.c_str());
 		return result;
 	}
 
 	void Emulator::LoadInterfaceImage()
 	{
-	    SDL_Surface *loaded_surface = IMG_Load((model_path + "/" + std::string(GetModelInfo("interface_image_path"))).c_str());
+	    SDL_Surface *loaded_surface = IMG_Load(GetModelFilePath(GetModelInfo("interface_image_path")).c_str());
 	    if (!loaded_surface)
 	    	PANIC("IMG_Load failed: %s\n", IMG_GetError());
 
@@ -110,11 +119,16 @@ namespace casioemu
 	    SDL_FreeSurface(loaded_surface);
 	}
 
+	std::string Emulator::GetModelFilePath(std::string relative_path)
+	{
+		return model_path + "/" + relative_path;
+	}
+
 	void Emulator::TimerCallback()
 	{
 		Uint64 cycles_to_emulate = cycles.GetDelta();
-
-		printf("Timer callback, will emulate %lu cycles\n", cycles_to_emulate);
+		for (Uint64 ix = 0; ix != cycles_to_emulate; ++ix)
+			chipset.Tick();
 	}
 
 	bool Emulator::Running()

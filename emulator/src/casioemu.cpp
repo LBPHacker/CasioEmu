@@ -13,11 +13,12 @@ int main(int argc, char *argv[])
 		exit(2);
 	}
 
-	if (SDL_Init(SDL_INIT_VIDEO & SDL_INIT_TIMER) < 0)
+	int sdlFlags = SDL_INIT_VIDEO & SDL_INIT_TIMER;
+	if (SDL_Init(sdlFlags) != sdlFlags)
 		PANIC("SDL_Init failed: %s\n", SDL_GetError());
 
 	int imgFlags = IMG_INIT_PNG;
-	if (!(IMG_Init(imgFlags) & imgFlags))
+	if (IMG_Init(imgFlags) != imgFlags)
 		PANIC("IMG_Init failed: %s\n", IMG_GetError());
 
 	casioemu::Emulator emulator(argv[1], 20, 32768);
@@ -29,10 +30,6 @@ int main(int argc, char *argv[])
 
 		switch (event.type)
 		{
-		// case SDL_USEREVENT:
-		// 	printf("Timed out\n");
-		// 	running = false;
-		// 	break;
 		case SDL_WINDOWEVENT:
 			switch (event.window.event)
 			{
