@@ -1,10 +1,56 @@
 #! /usr/bin/env luajit
 
+if not bit then
+	bit = {}
+
+	local function loopfunc(a, b, t, u)
+		a = a % 0x100000000
+		b = b % 0x100000000
+		local r = 0
+		for ix = 31, 0, -1 do
+			local v = 2 ^ ix
+			local m = 0
+			if a >= v then
+				a = a - v
+				m = m + 1
+			end
+			if b >= v then
+				b = b - v
+				m = m + 1
+			end
+			if m == t or m == u then
+				r = r + v
+			end
+		end
+		return r
+	end
+
+	function bit.band(a, b)
+		return loopfunc(a, b, 2)
+	end
+
+	function bit.bor(a, b)
+		return loopfunc(a, b, 1, 2)
+	end
+
+	function bit.bxor(a, b)
+		return loopfunc(a, b, 1)
+	end
+
+	function bit.lshift(a, b)
+		return (a * 2 ^ b) % 0x100000000
+	end
+
+	function bit.rshift(a, b)
+		return math.floor(a / 2 ^ b) % 0x100000000
+	end
+end
+
 local args_assoc = {
 	input = "/dev/stdin",
 	output = "/dev/stdout",
 	entry = "",
-	compliment_entries = false,
+	complement_entries = false,
 	strict = false,
 	addresses = false,
 	rom_window = 0
@@ -308,7 +354,9 @@ do
 		local vmask = 0
 		for ix = 2, #repr do
 			local shift, pmask = repr[ix][2], math.abs(repr[ix][3])
-			vmask = bit.bor(vmask, bit.lshift(pmask, shift))
+			if shift >= 0 then
+				vmask = bit.bor(vmask, bit.lshift(pmask, shift))
+			end
 		end
 		local maskvariants = {[0] = true}
 		for ix = 0, 15 do
@@ -530,7 +578,7 @@ do
 		end
 		entry_ords_in[entry_ord] = true
 	end
-	if args_assoc.compliment_entries then
+	if args_assoc.complement_entries then
 		for entry_ord = 1, 127 do
 			entry_ords_in[entry_ord] = not entry_ords_in[entry_ord] and true or nil
 		end
