@@ -5,25 +5,8 @@
 #include "MMU.hpp"
 #include "Logger.hpp"
 
-#define OPCODE_DISPATCH_SIZE (1 << 16)
-
 namespace casioemu
 {
-	CPU::CPU(Emulator &_emulator) : emulator(_emulator), reg_lr(reg_elr[0]), reg_lcsr(reg_ecsr[0]), reg_psw(reg_epsw[0])
-	{
-		opcode_dispatch = new OpcodeSource *[OPCODE_DISPATCH_SIZE];
-		for (size_t ix = 0; ix != OPCODE_DISPATCH_SIZE; ++ix)
-		{
-			opcode_dispatch[ix]->handler_function = nullptr;
-			// opcode_dispatch[ix].handler_function = &CPU::Everything;
-		}
-	}
-
-	CPU::~CPU()
-	{
-		delete[] opcode_dispatch;
-	}
-
 	uint16_t CPU::Fetch()
 	{
 		if (reg_pc & 1)
@@ -50,7 +33,7 @@ namespace casioemu
 			uint16_t opcode = Fetch();
 			OpcodeSource *handler = opcode_dispatch[opcode];
 
-			if (!handler->handler_function)
+			if (!handler)
 				PANIC("unrecognized instruction %04X at %06zX\n", opcode, ((size_t)reg_csr) << 16 | (reg_pc - 2));
 
 			impl_long_imm = 0;
@@ -59,9 +42,9 @@ namespace casioemu
 
 			for (size_t ix = 0; ix != sizeof(impl_operands) / sizeof(impl_operands[0]); ++ix)
 			{
-				impl_operands[ix].value = (opcode & handler->operand_masks[ix].mask) << handler->operand_masks[ix].shift;
+				impl_operands[ix].value = (opcode & handler->operands[ix].mask) << handler->operands[ix].shift;
 				impl_operands[ix].register_index = impl_operands[ix].value;
-				impl_operands[ix].register_size = handler->operand_masks[ix].register_size;
+				impl_operands[ix].register_size = handler->operands[ix].register_size;
 				if (impl_operands[ix].register_size)
 					;// * TODO: read reg[.register_index] into .value
 			}
@@ -162,11 +145,11 @@ namespace casioemu
 		{&CPU::OP_CTRL       ,                                0, 0xA003, {{1, 0x000F,  8}, {0,      0,  0}}},
 		{&CPU::OP_CTRL       ,                                0, 0xA10A, {{0,      0,  0}, {2, 0x000E,  4}}},
 		// * PUSH/POP Instructions
-		{&CPU::OP_PUSH       ,                                0, 0xF05E, {{2, 0x000E,  8}, {0,      0,  0}}},
-		{&CPU::OP_PUSH       ,                                0, 0xF07E, {{8, 0x0008,  8}, {0,      0,  0}}},
-		{&CPU::OP_PUSH       ,                                0, 0xF04E, {{1, 0x000F,  8}, {0,      0,  0}}},
-		{&CPU::OP_PUSH       ,                                0, 0xF06E, {{4, 0x000C,  8}, {0,      0,  0}}},
-		{&CPU::OP_PUSH2      ,                                0, 0xF0CE, {{0, 0x000F,  8}, {0,      0,  0}}},
+		{&CPU::OP_PUSH       ,                                0, 0xF05E, {{0,      0,  0}, {2, 0x000E,  8}}},
+		{&CPU::OP_PUSH       ,                                0, 0xF07E, {{0,      0,  0}, {8, 0x0008,  8}}},
+		{&CPU::OP_PUSH       ,                                0, 0xF04E, {{0,      0,  0}, {1, 0x000F,  8}}},
+		{&CPU::OP_PUSH       ,                                0, 0xF06E, {{0,      0,  0}, {4, 0x000C,  8}}},
+		{&CPU::OP_PUSH2      ,                                0, 0xF0CE, {{0,      0,  0}, {0, 0x000F,  8}}},
 		{&CPU::OP_POP        ,                                0, 0xF01E, {{2, 0x000E,  8}, {0,      0,  0}}},
 		{&CPU::OP_POP        ,                                0, 0xF03E, {{8, 0x0008,  8}, {0,      0,  0}}},
 		{&CPU::OP_POP        ,                                0, 0xF00E, {{1, 0x000F,  8}, {0,      0,  0}}},
@@ -192,18 +175,67 @@ namespace casioemu
 		{&CPU::OP_CR_EA      ,                      H_ST       , 0xF0ED, {{0, 0x0008,  8}, {0,      0,  0}}},
 		{&CPU::OP_CR_EA      ,               H_IA | H_ST       , 0xF0FD, {{0, 0x0008,  8}, {0,      0,  0}}},
 		// * EA Register Data Transfer Instructions
-		{&CPU::OP_LEA_R      ,                                0, 0xF00A, {{0, 0x000E,  4}, {0,      0,  0}}},
-		{&CPU::OP_LEA_I_R    ,                             H_TI, 0xF00B, {{0, 0x000E,  4}, {0,      0,  0}}},
+		{&CPU::OP_LEA_R      ,                                0, 0xF00A, {{0,      0,  0}, {2, 0x000E,  4}}},
+		{&CPU::OP_LEA_I_R    ,                             H_TI, 0xF00B, {{0,      0,  0}, {2, 0x000E,  4}}},
 		{&CPU::OP_LEA_I      ,                             H_TI, 0xF00C, {{0,      0,  0}, {0,      0,  0}}},
 		// * ALU Instructions
+		{&CPU::OP_DAA        ,                                0, 0x801F, {{1, 0x000F,  8}, {0,      0,  0}}},
+		{&CPU::OP_DAS        ,                                0, 0x803F, {{1, 0x000F,  8}, {0,      0,  0}}},
+		{&CPU::OP_NEG        ,                                0, 0x805F, {{1, 0x000F,  8}, {0,      0,  0}}},
 		// * Bit Access Instructions
+		{&CPU::OP_BITMOD     ,                                0, 0xA000, {{1, 0x000F,  8}, {0, 0x0007,  4}}},
+		{&CPU::OP_BITMOD     ,                             H_TI, 0xA080, {{0,      0,  0}, {0, 0x0007,  4}}},
+		{&CPU::OP_BITMOD     ,                                0, 0xA002, {{1, 0x000F,  8}, {0, 0x0007,  4}}},
+		{&CPU::OP_BITMOD     ,                             H_TI, 0xA082, {{0,      0,  0}, {0, 0x0007,  4}}},
+		{&CPU::OP_BITMOD     ,                                0, 0xA001, {{1, 0x000F,  8}, {0, 0x0007,  4}}},
+		{&CPU::OP_BITMOD     ,                             H_TI, 0xA081, {{0,      0,  0}, {0, 0x0007,  4}}},
 		// * PSW Access Instructions
+		{&CPU::OP_PSW_OR     ,                                0, 0xED08, {{0,      0,  0}, {0,      0,  0}}},
+		{&CPU::OP_PSW_AND    ,                                0, 0xEBF7, {{0,      0,  0}, {0,      0,  0}}},
+		{&CPU::OP_PSW_OR     ,                                0, 0xED80, {{0,      0,  0}, {0,      0,  0}}},
+		{&CPU::OP_PSW_AND    ,                                0, 0xEB7F, {{0,      0,  0}, {0,      0,  0}}},
+		{&CPU::OP_CPLC       ,                                0, 0xFECF, {{0,      0,  0}, {0,      0,  0}}},
 		// * Conditional Relative Branch Instructions
+		{&CPU::OP_BC         ,                                0, 0xC000, {{0, 0x00FF,  0}, {0,      0,  0}}},
+		{&CPU::OP_BC         ,                                0, 0xC100, {{0, 0x00FF,  0}, {0,      0,  0}}},
+		{&CPU::OP_BC         ,                                0, 0xC200, {{0, 0x00FF,  0}, {0,      0,  0}}},
+		{&CPU::OP_BC         ,                                0, 0xC300, {{0, 0x00FF,  0}, {0,      0,  0}}},
+		{&CPU::OP_BC         ,                                0, 0xC400, {{0, 0x00FF,  0}, {0,      0,  0}}},
+		{&CPU::OP_BC         ,                                0, 0xC500, {{0, 0x00FF,  0}, {0,      0,  0}}},
+		{&CPU::OP_BC         ,                                0, 0xC600, {{0, 0x00FF,  0}, {0,      0,  0}}},
+		{&CPU::OP_BC         ,                                0, 0xC700, {{0, 0x00FF,  0}, {0,      0,  0}}},
+		{&CPU::OP_BC         ,                                0, 0xC800, {{0, 0x00FF,  0}, {0,      0,  0}}},
+		{&CPU::OP_BC         ,                                0, 0xC900, {{0, 0x00FF,  0}, {0,      0,  0}}},
+		{&CPU::OP_BC         ,                                0, 0xCA00, {{0, 0x00FF,  0}, {0,      0,  0}}},
+		{&CPU::OP_BC         ,                                0, 0xCB00, {{0, 0x00FF,  0}, {0,      0,  0}}},
+		{&CPU::OP_BC         ,                                0, 0xCC00, {{0, 0x00FF,  0}, {0,      0,  0}}},
+		{&CPU::OP_BC         ,                                0, 0xCD00, {{0, 0x00FF,  0}, {0,      0,  0}}},
+		{&CPU::OP_BC         ,                                0, 0xCE00, {{0, 0x00FF,  0}, {0,      0,  0}}},
 		// * Sign Extension Instruction
+		{&CPU::OP_EXTBW      ,                                0, 0x810F, {{0,      0,  0}, {0,      0,  0}}},
+		{&CPU::OP_EXTBW      ,                                0, 0x832F, {{0,      0,  0}, {0,      0,  0}}},
+		{&CPU::OP_EXTBW      ,                                0, 0x854F, {{0,      0,  0}, {0,      0,  0}}},
+		{&CPU::OP_EXTBW      ,                                0, 0x876F, {{0,      0,  0}, {0,      0,  0}}},
+		{&CPU::OP_EXTBW      ,                                0, 0x898F, {{0,      0,  0}, {0,      0,  0}}},
+		{&CPU::OP_EXTBW      ,                                0, 0x8BAF, {{0,      0,  0}, {0,      0,  0}}},
+		{&CPU::OP_EXTBW      ,                                0, 0x8DCF, {{0,      0,  0}, {0,      0,  0}}},
+		{&CPU::OP_EXTBW      ,                                0, 0x8FEF, {{0,      0,  0}, {0,      0,  0}}},
 		// * Software Interrupt Instructions
+		{&CPU::OP_SWI        ,                                0, 0xE500, {{0, 0x003F,  0}, {0,      0,  0}}},
+		{&CPU::OP_BRK        ,                                0, 0xFFFF, {{0,      0,  0}, {0,      0,  0}}},
 		// * Branch Instructions
+		{&CPU::OP_B          ,                             H_TI, 0xF000, {{0,      0,  0}, {0, 0x000F,  8}}},
+		{&CPU::OP_B          ,                                0, 0xF002, {{0,      0,  0}, {2, 0x000E,  4}}},
+		{&CPU::OP_BL         ,                             H_TI, 0xF001, {{0,      0,  0}, {0, 0x000F,  8}}},
+		{&CPU::OP_BL         ,                                0, 0xF003, {{0,      0,  0}, {2, 0x000E,  4}}},
 		// * Multiplication and Division Instructions
+		{&CPU::OP_MUL        ,                                0, 0xF004, {{2, 0x000E,  8}, {1, 0x000F,  4}}},
+		{&CPU::OP_DIV        ,                                0, 0xF009, {{2, 0x000E,  8}, {1, 0x000F,  4}}},
 		// * Miscellaneous Instructions
+		{&CPU::OP_INC_EA     ,                                0, 0xFE2F, {{0,      0,  0}, {0,      0,  0}}},
+		{&CPU::OP_DEC_EA     ,                                0, 0xFE3F, {{0,      0,  0}, {0,      0,  0}}},
+		{&CPU::OP_RT         ,                                0, 0xFE1F, {{0,      0,  0}, {0,      0,  0}}},
+		{&CPU::OP_RTI        ,                                0, 0xFE0F, {{0,      0,  0}, {0,      0,  0}}},
 		{&CPU::OP_NOP        ,                                0, 0xFE8F, {{0,      0,  0}, {0,      0,  0}}},
 		{&CPU::OP_DSR        ,                             H_DS, 0xFE9F, {{0,      0,  0}, {0,      0,  0}}},
 		{&CPU::OP_DSR        ,                      H_DW | H_DS, 0xE300, {{0, 0x00FF,  0}, {0,      0,  0}}},
@@ -231,6 +263,44 @@ namespace casioemu
 			impl_last_dsr = impl_operands[0].value;
 
 		reg_dsr = impl_last_dsr;
+	}
+
+	CPU::CPU(Emulator &_emulator) : emulator(_emulator), reg_lr(reg_elr[0]), reg_lcsr(reg_ecsr[0]), reg_psw(reg_epsw[0])
+	{
+		opcode_dispatch = new OpcodeSource *[0x10000];
+		for (size_t ix = 0; ix != 0x10000; ++ix)
+			opcode_dispatch[ix] = nullptr;
+
+		uint16_t *permutation_buffer = new uint16_t[0x10000];
+		for (size_t ix = 0; ix != sizeof(opcode_sources) / sizeof(opcode_sources[0]); ++ix)
+		{
+			OpcodeSource &handler_stub = opcode_sources[ix];
+
+			uint16_t varying_bits = 0;
+			for (size_t ox = 0; ox != sizeof(impl_operands) / sizeof(impl_operands[0]); ++ox)
+				varying_bits |= handler_stub.operands[ox].mask << handler_stub.operands[ox].shift;
+
+			size_t permutation_count = 1;
+			permutation_buffer[0] = handler_stub.opcode;
+			for (uint16_t checkbit = 0x8000; checkbit; checkbit >>= 1)
+			{
+				if (varying_bits & checkbit)
+				{
+					for (size_t px = 0; px != permutation_count; ++px)
+						permutation_buffer[px + permutation_count] = permutation_buffer[px] | checkbit;
+					permutation_count <<= 1;
+				}
+			}
+
+			for (size_t px = 0; px != permutation_count; ++px)
+				opcode_dispatch[permutation_buffer[px]] = &handler_stub;
+		}
+		delete[] permutation_buffer;
+	}
+
+	CPU::~CPU()
+	{
+		delete[] opcode_dispatch;
 	}
 }
 

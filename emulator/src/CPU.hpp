@@ -90,7 +90,7 @@ namespace casioemu
 				 */
 				size_t register_size;
 				uint16_t mask, shift;
-			} operand_masks[2];
+			} operands[2];
 		};
 		static OpcodeSource opcode_sources[];
 		OpcodeSource **opcode_dispatch;
@@ -138,14 +138,33 @@ namespace casioemu
 		void OP_LEA_I_R();
 		void OP_LEA_I();
 		// * ALU Instructions
+		void OP_DAA();
+		void OP_DAS();
+		void OP_NEG();
 		// * Bit Access Instructions
+		void OP_BITMOD();
 		// * PSW Access Instructions
+		void OP_PSW_OR();
+		void OP_PSW_AND();
+		void OP_CPLC();
 		// * Conditional Relative Branch Instructions
+		void OP_BC();
 		// * Sign Extension Instruction
+		void OP_EXTBW();
 		// * Software Interrupt Instructions
+		void OP_SWI();
+		void OP_BRK();
 		// * Branch Instructions
+		void OP_B();
+		void OP_BL();
 		// * Multiplication and Division Instructions
+		void OP_MUL();
+		void OP_DIV();
 		// * Miscellaneous Instructions
+		void OP_INC_EA();
+		void OP_DEC_EA();
+		void OP_RT();
+		void OP_RTI();
 		void OP_NOP();
 		void OP_DSR();
 	};
