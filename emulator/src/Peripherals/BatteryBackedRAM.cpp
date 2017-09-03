@@ -1,8 +1,8 @@
 #include "BatteryBackedRAM.hpp"
 
-#include "MMU.hpp"
-#include "Emulator.hpp"
-#include "Chipset.hpp"
+#include "../MMU.hpp"
+#include "../Emulator.hpp"
+#include "../Chipset.hpp"
 
 namespace casioemu
 {

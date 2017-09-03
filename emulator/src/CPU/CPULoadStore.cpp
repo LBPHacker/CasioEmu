@@ -1,13 +1,9 @@
-#include "CPU.hpp"
+#include "../CPU.hpp"
 
 namespace casioemu
 {
 	// * Load/Store Instructions
 	void CPU::OP_LS_EA()
-	{
-	}
-
-	void CPU::OP_LS_EAP()
 	{
 	}
 

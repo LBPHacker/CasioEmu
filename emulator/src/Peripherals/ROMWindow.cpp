@@ -1,9 +1,9 @@
 #include "ROMWindow.hpp"
 
-#include "Logger.hpp"
-#include "MMU.hpp"
-#include "Emulator.hpp"
-#include "Chipset.hpp"
+#include "../Logger.hpp"
+#include "../MMU.hpp"
+#include "../Emulator.hpp"
+#include "../Chipset.hpp"
 
 namespace casioemu
 {

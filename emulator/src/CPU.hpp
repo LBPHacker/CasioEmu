@@ -63,11 +63,11 @@ namespace casioemu
 
 		enum OpcodeHint
 		{
-			H_00 = 0x0000, // * Nothing interesting.
 			H_IE = 0x0001, // * Extend Immediate flag for arithmethic instructions.
-			H_ST = 0x0001, // * Store flag for load/store instructions.
+			H_ST = 0x0001, // * Store flag for load/store/coprocessor instructions.
 			H_DW = 0x0001, // * Store a new DSR value.
 			H_DS = 0x0002, // * Instruction is a DSR prefix.
+			H_IA = 0x0002, // * Increment EA flag for load/store/coprocessor instructions.
 			H_TI = 0x0004  // * Instruction takes an external long immediate value.
 		};
 
@@ -117,20 +117,26 @@ namespace casioemu
 		void OP_SRLC();
 		// * Load/Store Instructions
 		void OP_LS_EA();
-		void OP_LS_EAP();
 		void OP_LS_R();
 		void OP_LS_I_R();
 		void OP_LS_I_BP();
 		void OP_LS_I_FP();
 		void OP_LS_I();
 		// * Control Register Access Instructions
+		void OP_ADDSP();
+		void OP_CTRL();
 		// * PUSH/POP Instructions
 		void OP_PUSH();
 		void OP_PUSH2();
 		void OP_POP();
 		void OP_POP2();
 		// * Coprocessor Data Transfer Instructions
+		void OP_CR_R();
+		void OP_CR_EA();
 		// * EA Register Data Transfer Instructions
+		void OP_LEA_R();
+		void OP_LEA_I_R();
+		void OP_LEA_I();
 		// * ALU Instructions
 		// * Bit Access Instructions
 		// * PSW Access Instructions

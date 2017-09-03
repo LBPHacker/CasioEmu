@@ -1,4 +1,4 @@
-#include "CPU.hpp"
+#include "../CPU.hpp"
 
 namespace casioemu
 {

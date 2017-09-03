@@ -5,9 +5,8 @@
 #include "CPU.hpp"
 #include "MMU.hpp"
 
-// * Peripheral classes.
-#include "ROMWindow.hpp"
-#include "BatteryBackedRAM.hpp"
+#include "Peripherals/ROMWindow.hpp"
+#include "Peripherals/BatteryBackedRAM.hpp"
 
 #include <fstream>
 
