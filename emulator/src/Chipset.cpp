@@ -175,7 +175,7 @@ namespace casioemu
 		cpu.reg_csr = 0;
 		cpu.reg_pc = mmu.ReadCode(index * 2, 2);
 
-		// logger::Info("PC is %04X\n", cpu.reg_pc);
+		logger::Info("PC is %04X\n", cpu.reg_pc);
 
 		// * TODO: introduce delay
 
@@ -186,11 +186,14 @@ namespace casioemu
 	void Chipset::Tick()
 	{
 		// * TODO: decrement delay counter, return if it's not 0
-		// * TODO: tick peripherals to raise interrupts
+
+		for (auto peripheral : peripherals)
+			peripheral->Tick();
+
 		if (pending_interrupt_count)
 			AcceptInterrupt();
 
-		// * TODO: process instructions or something
+		cpu.Next();
 	}
 }
 

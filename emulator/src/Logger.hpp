@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Config.hpp"
 
 #include <string>

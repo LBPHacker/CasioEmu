@@ -1,6 +1,6 @@
 #pragma once
-
 #include "Config.hpp"
+
 #include "Peripheral.hpp"
 #include "MMURegion.hpp"
 
@@ -16,6 +16,7 @@ namespace casioemu
 
 		void Initialise();
 		void Uninitialise();
+		void Tick();
 	};
 }
 

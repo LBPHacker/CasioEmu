@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Config.hpp"
 
 #include <string>
@@ -29,7 +28,7 @@ namespace casioemu
 
 		std::forward_list<Peripheral *> peripherals;
 
-		/*
+		/**
 		 * A bunch of internally used methods for encapsulation purposes.
 		 */
 		size_t pending_interrupt_count;
@@ -47,14 +46,14 @@ namespace casioemu
 		MMU &mmu;
 		std::vector<char> rom_data;
 
-		/*
+		/**
 		 * This exists because the Emulator that owns this Chipset is not ready
 		 * to supply a ROM path upon construction. It has to call `LoadROM` later
 		 * in its contstructor.
 		 */
 		void SetupInternals();
 
-		/*
+		/**
 		 * See 1.3.7 in the nX-U8 manual.
 		 */
 		void Reset();

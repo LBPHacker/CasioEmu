@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Config.hpp"
 
 namespace casioemu
@@ -15,6 +14,7 @@ namespace casioemu
 		Peripheral(Emulator &emulator);
 		virtual void Initialise() = 0;
 		virtual void Uninitialise() = 0;
+		virtual void Tick() = 0;
 		virtual ~Peripheral();
 	};
 }

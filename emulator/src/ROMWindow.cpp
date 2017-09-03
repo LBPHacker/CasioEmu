@@ -14,20 +14,24 @@ namespace casioemu
 			PL_ROMWINDOW_SIZE, // * size
 			"ROMWindow", // * description
 			&emulator, // * userdata
-			[](const MMURegion &region, size_t offset, size_t length) {
-				return ((Emulator *)(region.userdata))->chipset.mmu.ReadCode(offset, length);
+			[](MMURegion *region, size_t offset, size_t length) {
+				return ((Emulator *)(region->userdata))->chipset.mmu.ReadCode(offset, length);
 			}, // * read function
-			[](const MMURegion &region, size_t offset, size_t length, uint64_t data) {
+			[](MMURegion *region, size_t offset, size_t length, uint64_t data) {
 				logger::Info("ROMWindow::[region write lamda]: Attempt to write %016llX to %06zX\n", data, offset);
 			} // * write function
 		};
 
-		emulator.chipset.mmu.RegisterRegion(region);
+		emulator.chipset.mmu.RegisterRegion(&region);
 	}
 
 	void ROMWindow::Uninitialise()
 	{
-		emulator.chipset.mmu.UnregisterRegion(region);
+		emulator.chipset.mmu.UnregisterRegion(&region);
+	}
+
+	void ROMWindow::Tick()
+	{
 	}
 }
 
