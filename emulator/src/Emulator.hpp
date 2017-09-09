@@ -19,7 +19,7 @@ namespace casioemu
 		SDL_Surface *window_surface, *interface_image_surface;
 		SDL_TimerID timer_id;
 		Uint32 timer_interval;
-		bool running;
+		bool running, paused;
 		Uint32 last_frame_tick_count;
 		std::string model_path;
 
@@ -75,6 +75,8 @@ namespace casioemu
 
 		bool Running();
 		void Shutdown();
+		bool Paused();
+		void Pause(bool paused);
 		ModelInfo GetModelInfo(std::string key);
 		std::string GetModelFilePath(std::string relative_path);
 	};

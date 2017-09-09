@@ -1,7 +1,10 @@
 #pragma once
 #include "Config.hpp"
 
+#include "Logger.hpp"
+
 #include <cstdint>
+#include <string>
 
 namespace casioemu
 {
@@ -15,18 +18,76 @@ namespace casioemu
 		CPU(Emulator &emulator);
 		~CPU();
 
+		template<typename T>
+		struct Register
+		{
+			T raw;
+			std::string name;
+
+			Register<T>()
+			{
+				name = "?";
+			}
+
+			operator T()
+			{
+				// logger::Info("[Register] Read %s\n", name.c_str());
+				return raw;
+			}
+
+			Register<T> &operator =(T value)
+			{
+				// if (sizeof(T) > 1)
+				// 	logger::Info("[Register] Write %s: %04X\n", name.c_str(), value);
+				// else
+				// 	logger::Info("[Register] Write %s: %02X\n", name.c_str(), value);
+				raw = value;
+				return *this;
+			}
+
+			Register<T> &operator &=(T value)
+			{
+				return *this = raw & value;
+			}
+
+			Register<T> &operator |=(T value)
+			{
+				return *this = raw | value;
+			}
+
+			Register<T> &operator ^=(T value)
+			{
+				return *this = raw ^ value;
+			}
+
+			Register<T> &operator +=(T value)
+			{
+				return *this = raw + value;
+			}
+
+			Register<T> &operator -=(T value)
+			{
+				return *this = raw - value;
+			}
+		};
+
+		typedef Register<uint8_t> reg8_t;
+		typedef Register<uint16_t> reg16_t;
+
 		/**
 		 * See 1.2.1 in the nX-U8 manual.
 		 */
-		uint8_t reg_r[16], reg_cr[16];
-		uint16_t reg_pc, reg_elr[4], &reg_lr;
-		uint16_t reg_csr, reg_ecsr[4], &reg_lcsr;
-		uint16_t reg_epsw[4], &reg_psw;
-		uint16_t reg_sp, reg_ea;
-		uint8_t reg_dsr;
+		reg8_t reg_r[16], reg_cr[16];
+		reg16_t reg_pc, reg_elr[4], &reg_lr;
+		reg16_t reg_csr, reg_ecsr[4], &reg_lcsr;
+		reg8_t reg_epsw[4], &reg_psw;
+		reg16_t reg_sp, reg_ea;
+		reg8_t reg_dsr;
 
 		uint8_t impl_last_dsr;
-		uint16_t impl_long_imm;
+		uint8_t impl_flags_changed, impl_flags_out, impl_flags_in;
+		uint8_t impl_shift_buffer;
+		uint16_t impl_opcode, impl_long_imm;
 		struct {
 			uint64_t value;
 			size_t register_index, register_size;
@@ -68,7 +129,8 @@ namespace casioemu
 			H_DW = 0x0001, // * Store a new DSR value.
 			H_DS = 0x0002, // * Instruction is a DSR prefix.
 			H_IA = 0x0002, // * Increment EA flag for load/store/coprocessor instructions.
-			H_TI = 0x0004  // * Instruction takes an external long immediate value.
+			H_TI = 0x0004, // * Instruction takes an external long immediate value.
+			H_WB = 0x0008  // * Register Writeback flag for a lot of instructions to make life easier.
 		};
 
 		struct OpcodeSource
@@ -79,7 +141,7 @@ namespace casioemu
 			 * convert literally everything to int if it's more than a single enum
 			 * value. Even binary OR'd values and 0. Pain in the ass.
 			 */
-			uint16_t hint;
+			size_t hint;
 			uint16_t opcode;
 			struct OperandMask
 			{
@@ -100,8 +162,6 @@ namespace casioemu
 		void OP_ADD16();
 		void OP_ADDC();
 		void OP_AND();
-		void OP_CMP();
-		void OP_CMPC();
 		void OP_MOV16();
 		void OP_MOV();
 		void OP_OR();
@@ -109,6 +169,10 @@ namespace casioemu
 		void OP_CMP16();
 		void OP_SUB();
 		void OP_SUBC();
+		void Add8();
+		void ZSCheck();
+		void ShiftLeft8();
+		void ShiftRight8();
 		// * Shift Instructions
 		void OP_SLL();
 		void OP_SLLC();
@@ -122,21 +186,22 @@ namespace casioemu
 		void OP_LS_I_BP();
 		void OP_LS_I_FP();
 		void OP_LS_I();
+		void LoadStore(uint16_t offset, size_t length);
 		// * Control Register Access Instructions
 		void OP_ADDSP();
 		void OP_CTRL();
 		// * PUSH/POP Instructions
 		void OP_PUSH();
-		void OP_PUSH2();
+		void OP_PUSHL();
 		void OP_POP();
-		void OP_POP2();
+		void OP_POPL();
+		void Push16(uint16_t data);
+		uint16_t Pop16();
 		// * Coprocessor Data Transfer Instructions
 		void OP_CR_R();
 		void OP_CR_EA();
 		// * EA Register Data Transfer Instructions
-		void OP_LEA_R();
-		void OP_LEA_I_R();
-		void OP_LEA_I();
+		void OP_LEA();
 		// * ALU Instructions
 		void OP_DAA();
 		void OP_DAS();

@@ -20,9 +20,9 @@ namespace casioemu
 	public:
 		MMU(Emulator &emulator);
 		~MMU();
-		uint64_t ReadCode(size_t offset, size_t length);
-		uint64_t ReadData(size_t offset, size_t length);
-		void WriteData(size_t offset, size_t length, uint64_t data);
+		uint16_t ReadCode(size_t offset);
+		uint8_t ReadData(size_t offset);
+		void WriteData(size_t offset, uint8_t data);
 
 		void RegisterRegion(MMURegion *region);
 		void UnregisterRegion(MMURegion *region);

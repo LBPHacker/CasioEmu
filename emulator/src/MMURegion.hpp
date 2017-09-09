@@ -11,8 +11,8 @@ namespace casioemu
 		size_t base, size;
 		std::string description;
 		void *userdata;
-		uint64_t (*read)(MMURegion *, size_t, size_t);
-		void (*write)(MMURegion *, size_t, size_t, uint64_t);
+		uint8_t (*read)(MMURegion *, size_t);
+		void (*write)(MMURegion *, size_t, uint8_t);
 	};
 }
 

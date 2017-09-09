@@ -11,6 +11,7 @@ namespace casioemu
 	Emulator::Emulator(std::string _model_path, Uint32 _timer_interval, Uint32 _cycles_per_second) : cycles(_cycles_per_second), chipset(*new Chipset(*this))
 	{
 		running = true;
+		paused = false;
 		timer_interval = _timer_interval;
 		model_path = _model_path;
 
@@ -136,9 +137,19 @@ namespace casioemu
 		return running;
 	}
 
+	bool Emulator::Paused()
+	{
+		return paused;
+	}
+
 	void Emulator::Shutdown()
 	{
 		running = false;
+	}
+
+	void Emulator::Pause(bool _paused)
+	{
+		paused = _paused;
 	}
 
 	Emulator::Cycles::Cycles(Uint64 _cycles_per_second)

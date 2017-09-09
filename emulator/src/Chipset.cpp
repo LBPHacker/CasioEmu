@@ -43,7 +43,7 @@ namespace casioemu
 		std::ifstream rom_handle(emulator.GetModelFilePath(emulator.GetModelInfo("rom_path")));
 		if (rom_handle.fail())
 			PANIC("std::ifstream failed: %s\n", strerror(errno));
-		rom_data = std::vector<char>((std::istreambuf_iterator<char>(rom_handle)), std::istreambuf_iterator<char>());
+		rom_data = std::vector<unsigned char>((std::istreambuf_iterator<char>(rom_handle)), std::istreambuf_iterator<char>());
 
 		for (auto peripheral : peripherals)
 			peripheral->Initialise();
@@ -51,7 +51,7 @@ namespace casioemu
 
 	void Chipset::Reset()
 	{
-		cpu.reg_sp = mmu.ReadCode(0, 2);
+		cpu.reg_sp = mmu.ReadCode(0);
 		cpu.reg_dsr = 0;
 		cpu.reg_psw = 0;
 
@@ -172,9 +172,9 @@ namespace casioemu
 		cpu.reg_ecsr[exception_level] = cpu.reg_csr;
 
 		cpu.reg_csr = 0;
-		cpu.reg_pc = mmu.ReadCode(index * 2, 2);
+		cpu.reg_pc = mmu.ReadCode(index * 2);
 
-		logger::Info("PC is %04X\n", cpu.reg_pc);
+		// logger::Info("PC is %04X\n", cpu.reg_pc.raw);
 
 		// * TODO: introduce delay
 
@@ -184,6 +184,9 @@ namespace casioemu
 
 	void Chipset::Tick()
 	{
+		if (emulator.Paused())
+			return;
+
 		// * TODO: decrement delay counter, return if it's not 0
 
 		for (auto peripheral : peripherals)

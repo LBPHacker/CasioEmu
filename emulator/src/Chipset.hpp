@@ -44,7 +44,7 @@ namespace casioemu
 		Emulator &emulator;
 		CPU &cpu;
 		MMU &mmu;
-		std::vector<char> rom_data;
+		std::vector<unsigned char> rom_data;
 
 		/**
 		 * This exists because the Emulator that owns this Chipset is not ready
@@ -63,6 +63,8 @@ namespace casioemu
 		void RaiseMaskable(size_t index);
 
 		void Tick();
+
+		friend class CPU;
 	};
 }
 

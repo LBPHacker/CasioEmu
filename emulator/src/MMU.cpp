@@ -4,14 +4,12 @@
 #include "Chipset.hpp"
 #include "Logger.hpp"
 
-#define SEGMENT_0_SIZE (1 << 16)
-
 namespace casioemu
 {
 	MMU::MMU(Emulator &_emulator) : emulator(_emulator)
 	{
-		segment_0_dispatch = new MMURegion *[SEGMENT_0_SIZE];
-		for (size_t ix = 0; ix != SEGMENT_0_SIZE; ++ix)
+		segment_0_dispatch = new MMURegion *[0x10000];
+		for (size_t ix = 0; ix != 0x10000; ++ix)
 			segment_0_dispatch[ix] = nullptr;
 	}
 
@@ -20,49 +18,46 @@ namespace casioemu
 		delete[] segment_0_dispatch;
 	}
 
-	uint64_t MMU::ReadCode(size_t offset, size_t length)
+	uint16_t MMU::ReadCode(size_t offset)
 	{
-		if (emulator.chipset.rom_data.size() < offset + length)
+		if (emulator.chipset.rom_data.size() <= offset)
 		{
-			logger::Info("out-of-bound ROM read of size %zu from %06zX\n", length, offset);
+			logger::Info("out-of-bound ROM read from %06zX\n", offset);
 			return 0;
 		}
-		uint64_t result = 0;
-		for (size_t ix = 0; ix != length; ++ix)
-			result |= uint64_t(emulator.chipset.rom_data[offset + ix]) << (8 * ix);
-		return result;
+		return emulator.chipset.rom_data[offset] | (((uint16_t)emulator.chipset.rom_data[offset + 1]) << 8);
 	}
 
-	uint64_t MMU::ReadData(size_t offset, size_t length)
+	uint8_t MMU::ReadData(size_t offset)
 	{
-		if (offset >= SEGMENT_0_SIZE)
+		if (offset >= 0x10000)
 		{
-			logger::Info("high segment read of size %zu from %06zX\n", length, offset);
+			logger::Info("high segment read from %06zX\n", offset);
 			return 0;
 		}
 		MMURegion *region = segment_0_dispatch[offset];
 		if (!region)
 		{
-			logger::Info("unmapped read of size %zu from %06zX\n", length, offset);
+			logger::Info("unmapped read from %06zX\n", offset);
 			return 0;
 		}
-		return region->read(region, offset, length);
+		return region->read(region, offset);
 	}
 
-	void MMU::WriteData(size_t offset, size_t length, uint64_t data)
+	void MMU::WriteData(size_t offset, uint8_t data)
 	{
-		if (offset >= SEGMENT_0_SIZE)
+		if (offset >= 0x10000)
 		{
-			logger::Info("high segment write of size %zu from %06zX\n", length, offset);
+			logger::Info("high segment write to %06zX\n", offset);
 			return;
 		}
 		MMURegion *region = segment_0_dispatch[offset];
 		if (!region)
 		{
-			logger::Info("unmapped write of size %zu from %06zX\n", length, offset);
+			logger::Info("unmapped write to %06zX\n", offset);
 			return;
 		}
-		region->write(region, offset, length, data);
+		region->write(region, offset, data);
 	}
 
 	void MMU::RegisterRegion(MMURegion *region)
