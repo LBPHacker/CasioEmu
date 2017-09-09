@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <string>
+#include <map>
 
 namespace casioemu
 {
@@ -14,33 +15,33 @@ namespace casioemu
 	{
 		Emulator &emulator;
 
-	public:
-		CPU(Emulator &emulator);
-		~CPU();
+	private:
+		struct RegisterStub
+		{
+			size_t type_size;
+			std::string name;
+			uint16_t raw;
+			bool read, written;
+		};
 
 		template<typename T>
-		struct Register
+		struct Register : public RegisterStub
 		{
-			T raw;
-			std::string name;
-
 			Register<T>()
 			{
+				type_size = sizeof(T);
 				name = "?";
 			}
 
 			operator T()
 			{
-				// logger::Info("[Register] Read %s\n", name.c_str());
+				read = true;
 				return raw;
 			}
 
 			Register<T> &operator =(T value)
 			{
-				// if (sizeof(T) > 1)
-				// 	logger::Info("[Register] Write %s: %04X\n", name.c_str(), value);
-				// else
-				// 	logger::Info("[Register] Write %s: %02X\n", name.c_str(), value);
+				written = true;
 				raw = value;
 				return *this;
 			}
@@ -94,6 +95,10 @@ namespace casioemu
 		} impl_operands[2];
 		size_t impl_hint;
 
+	public:
+		CPU(Emulator &emulator);
+		~CPU();
+
 		/**
 		 * See 1.2.2.1 in the nX-U8 manual.
 		 */
@@ -117,7 +122,11 @@ namespace casioemu
 			MM_LARGE
 		} memory_model;
 
+		void SetMemoryModel(MemoryModel memory_model);
 		void Next();
+		void Reset();
+		void Raise(size_t exception_level, size_t index);
+		size_t GetExceptionLevel();
 
 	private:
 		uint16_t Fetch();
@@ -156,6 +165,18 @@ namespace casioemu
 		};
 		static OpcodeSource opcode_sources[];
 		OpcodeSource **opcode_dispatch;
+
+		typedef RegisterStub CPU::*RegisterStubPointer;
+		typedef RegisterStub (CPU::*RegisterStubArrayPointer)[];
+		struct RegisterRecord
+		{
+			std::string name;
+			size_t array_size, array_base;
+			RegisterStubPointer stub;
+			RegisterStubArrayPointer stub_array;
+		};
+		static RegisterRecord register_record_sources[];
+		std::map<std::string, RegisterStub *> register_proxies;
 
 		// * Arithmetic Instructions
 		void OP_ADD();

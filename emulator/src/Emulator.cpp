@@ -10,6 +10,7 @@ namespace casioemu
 {
 	Emulator::Emulator(std::string _model_path, Uint32 _timer_interval, Uint32 _cycles_per_second) : cycles(_cycles_per_second), chipset(*new Chipset(*this))
 	{
+		std::lock_guard<std::mutex> access_guard(access_lock);
 		running = true;
 		paused = false;
 		timer_interval = _timer_interval;
@@ -54,6 +55,7 @@ namespace casioemu
 
 	Emulator::~Emulator()
 	{
+		std::lock_guard<std::mutex> access_guard(access_lock);
 		SDL_RemoveTimer(timer_id);
 
 	    SDL_FreeSurface(interface_image_surface);
@@ -127,6 +129,7 @@ namespace casioemu
 
 	void Emulator::TimerCallback()
 	{
+		std::lock_guard<std::mutex> access_guard(access_lock);
 		Uint64 cycles_to_emulate = cycles.GetDelta();
 		for (Uint64 ix = 0; ix != cycles_to_emulate; ++ix)
 			chipset.Tick();

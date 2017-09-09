@@ -21,23 +21,26 @@ int main(int argc, char *argv[])
 	if (IMG_Init(imgFlags) != imgFlags)
 		PANIC("IMG_Init failed: %s\n", IMG_GetError());
 
-	casioemu::Emulator emulator(argv[1], 20, 32768);
-	while (emulator.Running())
 	{
-		SDL_Event event;
-		if (!SDL_WaitEvent(&event))
-			PANIC("SDL_WaitEvent failed: %s\n", SDL_GetError());
-
-		switch (event.type)
+		casioemu::Emulator emulator(argv[1], 20, 32768);
+		while (emulator.Running())
 		{
-		case SDL_WINDOWEVENT:
-			switch (event.window.event)
+			SDL_Event event;
+			if (!SDL_WaitEvent(&event))
+				PANIC("SDL_WaitEvent failed: %s\n", SDL_GetError());
+
+			switch (event.type)
 			{
-			case SDL_WINDOWEVENT_CLOSE:
-				emulator.Shutdown();
+			case SDL_WINDOWEVENT:
+				switch (event.window.event)
+				{
+				case SDL_WINDOWEVENT_CLOSE:
+					std::lock_guard<std::mutex> access_guard(emulator.access_lock);
+					emulator.Shutdown();
+					break;
+				}
 				break;
 			}
-			break;
 		}
 	}
 

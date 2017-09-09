@@ -5,6 +5,8 @@
 #include "MMU.hpp"
 #include "Logger.hpp"
 
+#include <sstream>
+
 namespace casioemu
 {
 	CPU::OpcodeSource CPU::opcode_sources[] = {
@@ -192,6 +194,28 @@ namespace casioemu
 		{&CPU::OP_DSR        ,               H_DS | H_DW, 0x900F, {{1, 0x000F,  4}, {0,      0,  0}}}
 	};
 
+	CPU::RegisterRecord CPU::register_record_sources[] = {
+		{    "r", 16, 0, nullptr,    (RegisterStubArrayPointer)&CPU::reg_r},
+		{   "cr", 16, 0, nullptr,   (RegisterStubArrayPointer)&CPU::reg_cr},
+		{   "pc",  1, 0,        (RegisterStubPointer)&CPU::reg_pc, nullptr},
+		{  "csr",  1, 0,       (RegisterStubPointer)&CPU::reg_csr, nullptr},
+		{   "lr",  1, 0, nullptr,  (RegisterStubArrayPointer)&CPU::reg_elr},
+		{ "elr1",  1, 1, nullptr,  (RegisterStubArrayPointer)&CPU::reg_elr},
+		{ "elr2",  1, 2, nullptr,  (RegisterStubArrayPointer)&CPU::reg_elr},
+		{ "elr3",  1, 3, nullptr,  (RegisterStubArrayPointer)&CPU::reg_elr},
+		{ "lcsr",  1, 0, nullptr, (RegisterStubArrayPointer)&CPU::reg_ecsr},
+		{"ecsr1",  1, 1, nullptr, (RegisterStubArrayPointer)&CPU::reg_ecsr},
+		{"ecsr2",  1, 2, nullptr, (RegisterStubArrayPointer)&CPU::reg_ecsr},
+		{"ecsr3",  1, 3, nullptr, (RegisterStubArrayPointer)&CPU::reg_ecsr},
+		{  "psw",  1, 0, nullptr, (RegisterStubArrayPointer)&CPU::reg_epsw},
+		{"epsw1",  1, 1, nullptr, (RegisterStubArrayPointer)&CPU::reg_epsw},
+		{"epsw2",  1, 2, nullptr, (RegisterStubArrayPointer)&CPU::reg_epsw},
+		{"epsw3",  1, 3, nullptr, (RegisterStubArrayPointer)&CPU::reg_epsw},
+		{   "sp",  1, 0,        (RegisterStubPointer)&CPU::reg_sp, nullptr},
+		{   "ea",  1, 0,        (RegisterStubPointer)&CPU::reg_ea, nullptr},
+		{  "dsr",  1, 0,       (RegisterStubPointer)&CPU::reg_dsr, nullptr}
+	};
+
 	void CPU::OP_NOP()
 	{
 		/**
@@ -247,24 +271,37 @@ namespace casioemu
 		}
 		delete[] permutation_buffer;
 
-		reg_sp.name = "sp";
-		reg_dsr.name = "dsr";
-		reg_ea.name = "ea";
-		reg_pc.name = "pc";
-		reg_csr.name = "csr";
-		for (size_t ix = 0; ix != 4; ++ix)
+		for (size_t ix = 0; ix != sizeof(register_record_sources) / sizeof(register_record_sources[0]); ++ix)
 		{
-			reg_elr[ix].name = std::string("elr") + char(ix + '0');
-			reg_ecsr[ix].name = std::string("ecsr") + char(ix + '0');
-			reg_epsw[ix].name = std::string("epsw") + char(ix + '0');
-		}
-		reg_lr.name = "lr";
-		reg_lcsr.name = "lcsr";
-		reg_psw.name = "psw";
-		for (size_t ix = 0; ix != 16; ++ix)
-		{
-			reg_r[ix].name = std::string("r") + char(ix + '0');
-			reg_cr[ix].name = std::string("cr") + char(ix + '0');
+			RegisterRecord &record = register_record_sources[ix];
+
+			if (record.stub)
+			{
+				RegisterStub *register_stub = &(this->*record.stub);
+				register_stub->name = record.name;
+				register_proxies[record.name] = register_stub;
+			}
+
+			if (record.stub_array)
+			{
+				if (record.array_size == 1)
+				{
+					RegisterStub *register_stub = &(this->*record.stub_array)[record.array_base];
+					register_stub->name = record.name;
+					register_proxies[record.name] = register_stub;
+				}
+				else
+				{
+					for (size_t rx = 0; rx != record.array_size; ++rx)
+					{
+						std::stringstream ss;
+						ss << record.name << rx;
+						RegisterStub *register_stub = &(this->*record.stub_array)[rx];
+						register_stub->name = ss.str();
+						register_proxies[ss.str()] = register_stub;
+					}
+				}
+			}
 		}
 	}
 
@@ -280,8 +317,8 @@ namespace casioemu
 			logger::Info("warning: PC LSB set\n");
 			reg_pc &= ~1;
 		}
-		uint16_t opcode = emulator.chipset.mmu.ReadCode((((size_t)reg_csr) << 16) | reg_pc);
-		reg_pc += 2;
+		uint16_t opcode = emulator.chipset.mmu.ReadCode((reg_csr.raw << 16) | reg_pc.raw);
+		reg_pc.raw = (uint16_t)(reg_pc.raw + 2);
 		return opcode;
 	}
 
@@ -293,6 +330,12 @@ namespace casioemu
 		 * that activates DSR addressing without actually changing DSR.
 		 */
 		reg_dsr	= 0;
+
+		for (auto proxy : register_proxies)
+		{
+			proxy.second->read = false;
+			proxy.second->written = false;
+		}
 
 		while (1)
 		{
@@ -335,6 +378,36 @@ namespace casioemu
 			if (!(handler->hint & H_DS))
 				break;
 		}
+	}
+
+	void CPU::SetMemoryModel(MemoryModel _memory_model)
+	{
+		memory_model = _memory_model;
+	}
+
+	void CPU::Reset()
+	{
+		reg_sp = emulator.chipset.mmu.ReadCode(0);
+		reg_dsr = 0;
+		reg_psw = 0;
+	}
+
+	void CPU::Raise(size_t exception_level, size_t index)
+	{
+		if (exception_level == 1)
+			reg_psw.raw &= ~CPU::PSW_MIE;
+		reg_psw.raw = (reg_psw.raw & ~CPU::PSW_ELEVEL) | exception_level;
+
+		reg_elr[exception_level].raw = reg_pc.raw;
+		reg_ecsr[exception_level].raw = reg_csr.raw;
+
+		reg_csr.raw = 0;
+		reg_pc.raw = emulator.chipset.mmu.ReadCode(index * 2);
+	}
+
+	size_t CPU::GetExceptionLevel()
+	{
+		return reg_psw.raw & CPU::PSW_ELEVEL;
 	}
 }
 

@@ -6,6 +6,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <lua5.3/lua.hpp>
+#include <mutex>
 
 namespace casioemu
 {
@@ -65,6 +66,8 @@ namespace casioemu
 	public:
 		Emulator(std::string model_path, Uint32 timer_interval, Uint32 cycles_per_second);
 		~Emulator();
+
+		std::mutex access_lock;
 
 		/**
 		 * A reference to the emulator chipset. This object holds all CPU, MMU, memory and

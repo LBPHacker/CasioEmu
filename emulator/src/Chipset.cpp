@@ -14,7 +14,7 @@ namespace casioemu
 {
 	Chipset::Chipset(Emulator &_emulator) : emulator(_emulator), cpu(*new CPU(emulator)), mmu(*new MMU(emulator))
 	{
-		cpu.memory_model = CPU::MM_LARGE;
+		cpu.SetMemoryModel(CPU::MM_LARGE);
 
 		ConstructPeripherals();
 	}
@@ -51,9 +51,7 @@ namespace casioemu
 
 	void Chipset::Reset()
 	{
-		cpu.reg_sp = mmu.ReadCode(0);
-		cpu.reg_dsr = 0;
-		cpu.reg_psw = 0;
+		cpu.Reset();
 
 		interrupts_active[INT_RESET] = true;
 		pending_interrupt_count = 1;
@@ -61,7 +59,7 @@ namespace casioemu
 
 	void Chipset::Break()
 	{
-		if ((cpu.reg_psw & CPU::PSW_ELEVEL) > 1)
+		if (cpu.GetExceptionLevel() > 1)
 		{
 			Reset();
 			return;
@@ -110,7 +108,7 @@ namespace casioemu
 
 	void Chipset::AcceptInterrupt()
 	{
-		size_t old_exception_level = cpu.reg_psw & CPU::PSW_ELEVEL;
+		size_t old_exception_level = cpu.GetExceptionLevel();
 
 		size_t index = 0;
 		// * Reset has priority over everything.
@@ -164,15 +162,7 @@ namespace casioemu
 			break;
 		}
 
-		if (exception_level == 1)
-			cpu.reg_psw &= ~CPU::PSW_MIE;
-		cpu.reg_psw = (cpu.reg_psw & ~CPU::PSW_ELEVEL) | exception_level;
-
-		cpu.reg_elr[exception_level] = cpu.reg_pc;
-		cpu.reg_ecsr[exception_level] = cpu.reg_csr;
-
-		cpu.reg_csr = 0;
-		cpu.reg_pc = mmu.ReadCode(index * 2);
+		cpu.Raise(exception_level, index);
 
 		// logger::Info("PC is %04X\n", cpu.reg_pc.raw);
 
