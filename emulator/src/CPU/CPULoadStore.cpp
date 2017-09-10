@@ -14,22 +14,22 @@ namespace casioemu
 
 	void CPU::OP_LS_R()
 	{
-		LoadStore(reg_r[impl_operands[1].value] | (((uint16_t)reg_r[impl_operands[1].value + 1]) << 8), impl_hint >> 8);
+		LoadStore(impl_operands[1].value | (((uint16_t)reg_r[impl_operands[1].value + 1]) << 8), impl_hint >> 8);
 	}
 
 	void CPU::OP_LS_I_R()
 	{
-		LoadStore((reg_r[impl_operands[1].value] | (((uint16_t)reg_r[impl_operands[1].value + 1]) << 8)) + impl_long_imm, impl_hint >> 8);
+		LoadStore((impl_operands[1].value | (((uint16_t)reg_r[impl_operands[1].value + 1]) << 8)) + impl_long_imm, impl_hint >> 8);
 	}
 
-	void CPU::OP_LS_I_BP()
+	void CPU::OP_LS_BP()
 	{
 		impl_operands[1].value |= (impl_operands[1].value & 0x20) ? 0xFF40 : 0;
 		impl_operands[1].value += reg_r[12] | (((uint16_t)reg_r[13]) << 8);
 		LoadStore(impl_operands[1].value, impl_hint >> 8);
 	}
 
-	void CPU::OP_LS_I_FP()
+	void CPU::OP_LS_FP()
 	{
 		impl_operands[1].value |= (impl_operands[1].value & 0x20) ? 0xFF40 : 0;
 		impl_operands[1].value += reg_r[14] | (((uint16_t)reg_r[15]) << 8);

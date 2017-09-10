@@ -24,7 +24,7 @@ namespace casioemu
 		{&CPU::OP_SUB        ,                         0, 0x7000, {{1, 0x000F,  8}, {0, 0x00FF,  0}}},
 		{&CPU::OP_SUBC       ,                         0, 0x8005, {{1, 0x000F,  8}, {1, 0x000F,  4}}},
 		{&CPU::OP_SUBC       ,                         0, 0x5000, {{1, 0x000F,  8}, {0, 0x00FF,  0}}},
-		{&CPU::OP_MOV16      , H_WB                     , 0xF006, {{2, 0x000E,  8}, {2, 0x000E,  4}}},
+		{&CPU::OP_MOV16      , H_WB                     , 0xF005, {{2, 0x000E,  8}, {2, 0x000E,  4}}},
 		{&CPU::OP_MOV16      , H_WB               | H_IE, 0xE000, {{2, 0x000E,  8}, {0, 0x007F,  0}}},
 		{&CPU::OP_MOV        , H_WB                     , 0x8000, {{1, 0x000F,  8}, {1, 0x000F,  4}}},
 		{&CPU::OP_MOV        , H_WB                     , 0x0000, {{1, 0x000F,  8}, {0, 0x00FF,  0}}},
@@ -51,15 +51,15 @@ namespace casioemu
 		{&CPU::OP_LS_EA      , 2 << 8 |      H_IA       , 0x9052, {{0, 0x000E,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_R       , 2 << 8                   , 0x9002, {{0, 0x000E,  8}, {2, 0x000E,  4}}},
 		{&CPU::OP_LS_I_R     , 2 << 8 |      H_TI       , 0xA008, {{0, 0x000E,  8}, {2, 0x000E,  4}}},
-		{&CPU::OP_LS_I_BP    , 2 << 8 |      H_TI       , 0xB000, {{0, 0x000E,  8}, {0, 0x003F,  0}}},
-		{&CPU::OP_LS_I_FP    , 2 << 8 |      H_TI       , 0xB040, {{0, 0x000E,  8}, {0, 0x003F,  0}}},
+		{&CPU::OP_LS_BP      , 2 << 8 |                0, 0xB000, {{0, 0x000E,  8}, {0, 0x003F,  0}}},
+		{&CPU::OP_LS_FP      , 2 << 8 |                0, 0xB040, {{0, 0x000E,  8}, {0, 0x003F,  0}}},
 		{&CPU::OP_LS_I       , 2 << 8 |      H_TI       , 0x9012, {{0, 0x000E,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_EA      , 1 << 8                   , 0x9030, {{0, 0x000F,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_EA      , 1 << 8 |      H_IA       , 0x9050, {{0, 0x000F,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_R       , 1 << 8                   , 0x9000, {{0, 0x000F,  8}, {2, 0x000E,  4}}},
 		{&CPU::OP_LS_I_R     , 1 << 8 |      H_TI       , 0x9008, {{0, 0x000F,  8}, {2, 0x000E,  4}}},
-		{&CPU::OP_LS_I_BP    , 1 << 8 |      H_TI       , 0xD000, {{0, 0x000F,  8}, {0, 0x003F,  0}}},
-		{&CPU::OP_LS_I_FP    , 1 << 8 |      H_TI       , 0xD040, {{0, 0x000F,  8}, {0, 0x003F,  0}}},
+		{&CPU::OP_LS_BP      , 1 << 8 |                0, 0xD000, {{0, 0x000F,  8}, {0, 0x003F,  0}}},
+		{&CPU::OP_LS_FP      , 1 << 8 |                0, 0xD040, {{0, 0x000F,  8}, {0, 0x003F,  0}}},
 		{&CPU::OP_LS_I       , 1 << 8 |      H_TI       , 0x9010, {{0, 0x000F,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_EA      , 4 << 8                   , 0x9034, {{0, 0x000C,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_EA      , 4 << 8 |      H_IA       , 0x9054, {{0, 0x000C,  8}, {0,      0,  0}}},
@@ -69,15 +69,15 @@ namespace casioemu
 		{&CPU::OP_LS_EA      , 2 << 8 |      H_IA | H_ST, 0x9053, {{0, 0x000E,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_R       , 2 << 8 |             H_ST, 0x9003, {{0, 0x000E,  8}, {2, 0x000E,  4}}},
 		{&CPU::OP_LS_I_R     , 2 << 8 |      H_TI | H_ST, 0xA009, {{0, 0x000E,  8}, {2, 0x000E,  4}}},
-		{&CPU::OP_LS_I_BP    , 2 << 8 |      H_TI | H_ST, 0xB080, {{0, 0x000E,  8}, {0, 0x003F,  0}}},
-		{&CPU::OP_LS_I_FP    , 2 << 8 |      H_TI | H_ST, 0xB0C0, {{0, 0x000E,  8}, {0, 0x003F,  0}}},
+		{&CPU::OP_LS_BP      , 2 << 8 |             H_ST, 0xB080, {{0, 0x000E,  8}, {0, 0x003F,  0}}},
+		{&CPU::OP_LS_FP      , 2 << 8 |             H_ST, 0xB0C0, {{0, 0x000E,  8}, {0, 0x003F,  0}}},
 		{&CPU::OP_LS_I       , 2 << 8 |      H_TI | H_ST, 0x9013, {{0, 0x000E,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_EA      , 1 << 8 |             H_ST, 0x9031, {{0, 0x000F,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_EA      , 1 << 8 |      H_IA | H_ST, 0x9051, {{0, 0x000F,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_R       , 1 << 8 |             H_ST, 0x9001, {{0, 0x000F,  8}, {2, 0x000E,  4}}},
 		{&CPU::OP_LS_I_R     , 1 << 8 |      H_TI | H_ST, 0x9009, {{0, 0x000F,  8}, {2, 0x000E,  4}}},
-		{&CPU::OP_LS_I_BP    , 1 << 8 |      H_TI | H_ST, 0xD080, {{0, 0x000F,  8}, {0, 0x003F,  0}}},
-		{&CPU::OP_LS_I_FP    , 1 << 8 |      H_TI | H_ST, 0xD0C0, {{0, 0x000F,  8}, {0, 0x003F,  0}}},
+		{&CPU::OP_LS_BP      , 1 << 8 |             H_ST, 0xD080, {{0, 0x000F,  8}, {0, 0x003F,  0}}},
+		{&CPU::OP_LS_FP      , 1 << 8 |             H_ST, 0xD0C0, {{0, 0x000F,  8}, {0, 0x003F,  0}}},
 		{&CPU::OP_LS_I       , 1 << 8 |      H_TI | H_ST, 0x9011, {{0, 0x000F,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_EA      , 4 << 8 |             H_ST, 0x9035, {{0, 0x000C,  8}, {0,      0,  0}}},
 		{&CPU::OP_LS_EA      , 4 << 8 |      H_IA | H_ST, 0x9055, {{0, 0x000C,  8}, {0,      0,  0}}},
@@ -267,7 +267,11 @@ namespace casioemu
 			}
 
 			for (size_t px = 0; px != permutation_count; ++px)
+			{
+				if (opcode_dispatch[permutation_buffer[px]])
+					PANIC("clashing opcode %04X\n", permutation_buffer[px]);
 				opcode_dispatch[permutation_buffer[px]] = &handler_stub;
+			}
 		}
 		delete[] permutation_buffer;
 
@@ -312,6 +316,9 @@ namespace casioemu
 
 	uint16_t CPU::Fetch()
 	{
+		if (reg_csr.raw >= 0x10)
+			PANIC("wtf\n");
+
 		if (reg_pc & 1)
 		{
 			logger::Info("warning: PC LSB set\n");
@@ -351,7 +358,7 @@ namespace casioemu
 
 			for (size_t ix = 0; ix != sizeof(impl_operands) / sizeof(impl_operands[0]); ++ix)
 			{
-				impl_operands[ix].value = (impl_opcode & handler->operands[ix].mask) >> handler->operands[ix].shift;
+				impl_operands[ix].value = (impl_opcode >> handler->operands[ix].shift) & handler->operands[ix].mask;
 				impl_operands[ix].register_index = impl_operands[ix].value;
 				impl_operands[ix].register_size = handler->operands[ix].register_size;
 
@@ -373,7 +380,7 @@ namespace casioemu
 
 			if (handler->hint & H_WB && impl_operands[0].register_size)
 				for (size_t bx = 0; bx != impl_operands[0].register_size; ++bx)
-					reg_r[impl_operands[bx].register_index + bx] = (uint8_t)(impl_operands[bx].value >> (bx * 8));
+					reg_r[impl_operands[0].register_index + bx] = (uint8_t)(impl_operands[0].value >> (bx * 8));
 
 			if (!(handler->hint & H_DS))
 				break;

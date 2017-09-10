@@ -10,7 +10,7 @@ INCLUDEDIRS :=
 CXX := g++
 CCEXT := cpp
 CCFLAGS := -g -std=c++11 -Wall -Wpedantic
-CCLINK := $(LIBSTOLINK) -lSDL2 -lSDL2_image -llua5.3
+CCLINK := $(LIBSTOLINK) -lSDL2 -lSDL2_image -llua5.3 -lpthread
 
 FILES := $(shell find $(SRCDIR) -name *.$(CCEXT))
 

@@ -21,7 +21,7 @@ namespace casioemu
 				return (uint8_t)rom_data;
 			}, // * read function
 			[](MMURegion *region, size_t offset, uint8_t data) {
-				logger::Info("ROMWindow::[region write lamda]: Attempt to write %02hhX to %06zX\n", data, offset);
+				logger::Info("ROMWindow::[region write lambda]: Attempt to write %02hhX to %06zX\n", data, offset);
 			} // * write function
 		};
 

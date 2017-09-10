@@ -25,7 +25,7 @@ namespace casioemu
 		impl_flags_in = (impl_flags_in & ~PSW_C) | (impl_flags_out & PSW_C);
 
 		for (size_t ix = 0; ix != sizeof(impl_operands) / sizeof(impl_operands[0]); ++ix)
-			impl_operands[ix].value = op_high[2];
+			impl_operands[ix].value = op_high[ix];
 		Add8();
 		ZSCheck();
 	}
@@ -86,7 +86,7 @@ namespace casioemu
 		impl_flags_in = (impl_flags_in & ~PSW_C) | (impl_flags_out & PSW_C);
 
 		for (size_t ix = 0; ix != sizeof(impl_operands) / sizeof(impl_operands[0]); ++ix)
-			impl_operands[ix].value = op_high[2];
+			impl_operands[ix].value = op_high[ix];
 		impl_operands[0].value ^= 0xFF;
 		Add8();
 		impl_operands[0].value ^= 0xFF;
@@ -191,10 +191,13 @@ namespace casioemu
 			break;
 		}
 
-		if (impl_hint & H_TI)
-			emulator.chipset.mmu.WriteData((((size_t)reg_dsr) << 16) | src_index, impl_operands[0].value);
-		else
-			reg_r[src_index] = impl_operands[0].value;
+		if ((impl_opcode & 0x000F) != 1)
+		{
+			if (impl_hint & H_TI)
+				emulator.chipset.mmu.WriteData((((size_t)reg_dsr) << 16) | src_index, impl_operands[0].value);
+			else
+				reg_r[src_index] = impl_operands[0].value;
+		}
 	}
 
 	// * Sign Extension Instruction
@@ -275,7 +278,7 @@ namespace casioemu
 	void CPU::ZSCheck()
 	{
 		impl_flags_changed |= PSW_Z | PSW_S;
-		impl_flags_out = (impl_flags_out & ~PSW_Z) | (impl_flags_out & (impl_operands[0].value ? PSW_Z : 0));
+		impl_flags_out = (impl_flags_out & ~PSW_Z) | (impl_flags_out & ((impl_operands[0].value & 0xFF) ? PSW_Z : 0));
 		impl_flags_out = (impl_flags_out & ~PSW_S) | ((impl_operands[0].value & 0x80) ? PSW_S : 0);
 	}
 

@@ -134,12 +134,12 @@ namespace casioemu
 		enum OpcodeHint
 		{
 			H_IE = 0x0001, // * Extend Immediate flag for arithmethic instructions.
-			H_ST = 0x0001, // * Store flag for load/store/coprocessor instructions.
-			H_DW = 0x0001, // * Store a new DSR value.
-			H_DS = 0x0002, // * Instruction is a DSR prefix.
-			H_IA = 0x0002, // * Increment EA flag for load/store/coprocessor instructions.
-			H_TI = 0x0004, // * Instruction takes an external long immediate value.
-			H_WB = 0x0008  // * Register Writeback flag for a lot of instructions to make life easier.
+			H_ST = 0x0002, // * Store flag for load/store/coprocessor instructions.
+			H_DW = 0x0004, // * Store a new DSR value.
+			H_DS = 0x0008, // * Instruction is a DSR prefix.
+			H_IA = 0x0010, // * Increment EA flag for load/store/coprocessor instructions.
+			H_TI = 0x0020, // * Instruction takes an external long immediate value.
+			H_WB = 0x0040  // * Register Writeback flag for a lot of instructions to make life easier.
 		};
 
 		struct OpcodeSource
@@ -204,8 +204,8 @@ namespace casioemu
 		void OP_LS_EA();
 		void OP_LS_R();
 		void OP_LS_I_R();
-		void OP_LS_I_BP();
-		void OP_LS_I_FP();
+		void OP_LS_BP();
+		void OP_LS_FP();
 		void OP_LS_I();
 		void LoadStore(uint16_t offset, size_t length);
 		// * Control Register Access Instructions

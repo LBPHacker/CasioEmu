@@ -63,8 +63,10 @@ namespace casioemu
 		void LoadInterfaceImage();
 		void TimerCallback();
 
+		std::string command_buffer;
+
 	public:
-		Emulator(std::string model_path, Uint32 timer_interval, Uint32 cycles_per_second);
+		Emulator(std::string model_path, Uint32 timer_interval, Uint32 cycles_per_second, bool paused = false);
 		~Emulator();
 
 		std::mutex access_lock;
@@ -78,8 +80,12 @@ namespace casioemu
 
 		bool Running();
 		void Shutdown();
-		bool Paused();
-		void Pause(bool paused);
+		/**
+		 * This returns `false` if the command was incomplete, `true` otherwise.
+		 */
+		bool ExecuteCommand(std::string command);
+		bool GetPaused();
+		void SetPaused(bool paused);
 		ModelInfo GetModelInfo(std::string key);
 		std::string GetModelFilePath(std::string relative_path);
 	};

@@ -1,9 +1,13 @@
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-
 #include "Config.hpp"
 
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <iostream>
+#include <thread>
+#include <string>
+
 #include "Emulator.hpp"
+#include "Logger.hpp"
 
 int main(int argc, char *argv[])
 {
@@ -22,7 +26,21 @@ int main(int argc, char *argv[])
 		PANIC("IMG_Init failed: %s\n", IMG_GetError());
 
 	{
-		casioemu::Emulator emulator(argv[1], 20, 32768);
+		casioemu::Emulator emulator(argv[1], 20, 32768, true);
+
+		std::thread console_input_thread([&emulator]() {
+			std::string console_input_str;
+			while (1)
+			{
+				std::cout << "> ";
+				std::getline(std::cin, console_input_str);
+				std::lock_guard<std::mutex> access_guard(emulator.access_lock);
+				if (!emulator.ExecuteCommand(console_input_str))
+					std::cout << ">";
+			}
+		});
+		console_input_thread.detach();
+
 		while (emulator.Running())
 		{
 			SDL_Event event;
@@ -46,6 +64,7 @@ int main(int argc, char *argv[])
 
 	IMG_Quit();
 	SDL_Quit();
+
 	return 0;
 }
 

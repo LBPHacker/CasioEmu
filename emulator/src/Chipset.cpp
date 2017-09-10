@@ -40,7 +40,7 @@ namespace casioemu
 
 	void Chipset::SetupInternals()
 	{
-		std::ifstream rom_handle(emulator.GetModelFilePath(emulator.GetModelInfo("rom_path")));
+		std::ifstream rom_handle(emulator.GetModelFilePath(emulator.GetModelInfo("rom_path")), std::ifstream::binary);
 		if (rom_handle.fail())
 			PANIC("std::ifstream failed: %s\n", strerror(errno));
 		rom_data = std::vector<unsigned char>((std::istreambuf_iterator<char>(rom_handle)), std::istreambuf_iterator<char>());
@@ -174,7 +174,7 @@ namespace casioemu
 
 	void Chipset::Tick()
 	{
-		if (emulator.Paused())
+		if (emulator.GetPaused())
 			return;
 
 		// * TODO: decrement delay counter, return if it's not 0

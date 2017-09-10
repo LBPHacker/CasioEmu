@@ -8,7 +8,7 @@ namespace casioemu
 	namespace logger
 	{
 		void Info(const char *format, ...);
-		void Info(std::string const str);
+		void InfoHere(const char *format, ...);
 	}
 }
 

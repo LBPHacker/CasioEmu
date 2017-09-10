@@ -1,6 +1,7 @@
 #include "Emulator.hpp"
 
 #include "Chipset.hpp"
+#include "Logger.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -8,11 +9,10 @@
 
 namespace casioemu
 {
-	Emulator::Emulator(std::string _model_path, Uint32 _timer_interval, Uint32 _cycles_per_second) : cycles(_cycles_per_second), chipset(*new Chipset(*this))
+	Emulator::Emulator(std::string _model_path, Uint32 _timer_interval, Uint32 _cycles_per_second, bool _paused) : paused(_paused), cycles(_cycles_per_second), chipset(*new Chipset(*this))
 	{
 		std::lock_guard<std::mutex> access_guard(access_lock);
 		running = true;
-		paused = false;
 		timer_interval = _timer_interval;
 		model_path = _model_path;
 
@@ -94,7 +94,7 @@ namespace casioemu
 		const char *value = lua_tostring(emulator.lua_state, -1);
 		if (!value)
 			PANIC("ModelInfo::operator std::string failed: key '%s' is not defined\n", key.c_str());
-		lua_pop(emulator.lua_state, 1);
+		lua_pop(emulator.lua_state, 2);
 		return std::string(value);
 	}
 
@@ -140,7 +140,7 @@ namespace casioemu
 		return running;
 	}
 
-	bool Emulator::Paused()
+	bool Emulator::GetPaused()
 	{
 		return paused;
 	}
@@ -150,7 +150,34 @@ namespace casioemu
 		running = false;
 	}
 
-	void Emulator::Pause(bool _paused)
+	bool Emulator::ExecuteCommand(std::string command)
+	{
+		command_buffer.append(command);
+
+		if (luaL_loadstring(lua_state, command_buffer.c_str()) != LUA_OK)
+		{
+			if (!strstr(lua_tostring(lua_state, -1), "<eof>"))
+			{
+				command_buffer.clear();
+				logger::Info("[Console input] %s\n", lua_tostring(lua_state, -1));
+			}
+
+			lua_pop(lua_state, 1);
+			return command_buffer.empty();
+		}
+
+		command_buffer.clear();
+		if (lua_pcall(lua_state, 0, 0, 0) != LUA_OK)
+		{
+			logger::Info("[Console input] %s\n", lua_tostring(lua_state, -1));
+			lua_pop(lua_state, 1);
+			return true;
+		}
+
+		return true;
+	}
+
+	void Emulator::SetPaused(bool _paused)
 	{
 		paused = _paused;
 	}

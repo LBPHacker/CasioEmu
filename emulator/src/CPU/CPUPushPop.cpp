@@ -56,7 +56,7 @@ namespace casioemu
 		{
 			reg_pc = Pop16();
 			if (memory_model == MM_LARGE)
-				reg_csr = Pop16();
+				reg_csr = Pop16() & 0x000F;
 		}
 	}
 
