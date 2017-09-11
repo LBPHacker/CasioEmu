@@ -278,7 +278,7 @@ namespace casioemu
 	void CPU::ZSCheck()
 	{
 		impl_flags_changed |= PSW_Z | PSW_S;
-		impl_flags_out = (impl_flags_out & ~PSW_Z) | (impl_flags_out & ((impl_operands[0].value & 0xFF) ? PSW_Z : 0));
+		impl_flags_out = (impl_flags_out & ~PSW_Z) | (impl_flags_out & (((impl_operands[0].value & 0xFF) == 0) ? PSW_Z : 0));
 		impl_flags_out = (impl_flags_out & ~PSW_S) | ((impl_operands[0].value & 0x80) ? PSW_S : 0);
 	}
 
