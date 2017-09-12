@@ -18,16 +18,20 @@ namespace casioemu
 		if (impl_hint & H_IE)
 			impl_operands[1].value |= (impl_operands[1].value & 0x40) ? 0xFF80 : 0;
 
-		uint8_t op_high[2] = {(uint8_t)(impl_operands[0].value >> 8), (uint8_t)(impl_operands[1].value >> 8)};
+		uint8_t op_high_0 = impl_operands[0].value >> 8;
+		uint8_t op_high_1 = impl_operands[1].value >> 8;
 		Add8();
 		ZSCheck();
 
 		impl_flags_in = (impl_flags_in & ~PSW_C) | (impl_flags_out & PSW_C);
 
-		for (size_t ix = 0; ix != sizeof(impl_operands) / sizeof(impl_operands[0]); ++ix)
-			impl_operands[ix].value = op_high[ix];
+		uint8_t op_low_0 = impl_operands[0].value;
+		impl_operands[0].value = op_high_0;
+		impl_operands[1].value = op_high_1;
 		Add8();
 		ZSCheck();
+
+		impl_operands[0].value = (impl_operands[0].value << 8) | op_low_0;
 	}
 
 	void CPU::OP_ADDC()
@@ -47,14 +51,14 @@ namespace casioemu
 		if (impl_hint & H_IE)
 			impl_operands[1].value |= (impl_operands[1].value & 0x40) ? 0xFF80 : 0;
 
-		uint8_t op_high[2] = {(uint8_t)(impl_operands[0].value >> 8), (uint8_t)(impl_operands[1].value >> 8)};
-		impl_operands[0].value &= impl_operands[1].value & 0xFF;
+		impl_operands[0].value = impl_operands[1].value & 0xFF;
 		ZSCheck();
 
-		for (size_t ix = 0; ix != sizeof(impl_operands) / sizeof(impl_operands[0]); ++ix)
-			impl_operands[ix].value = op_high[2];
-		impl_operands[0].value &= impl_operands[1].value & 0xFF;
+		uint8_t op_low_0 = impl_operands[0].value;
+		impl_operands[0].value = (impl_operands[1].value >> 8) & 0xFF;
 		ZSCheck();
+
+		impl_operands[0].value = (impl_operands[0].value << 8) | op_low_0;
 	}
 
 	void CPU::OP_MOV()
@@ -263,9 +267,9 @@ namespace casioemu
 		uint8_t op8[2] = {(uint8_t)impl_operands[0].value, (uint8_t)impl_operands[1].value};
 		uint16_t c_in = (impl_flags_in & PSW_C) ? 1 : 0;
 
-		uint16_t carry_8 = (((uint16_t)op8[0] & 0xFF) + (op8[1] & 0xFF) + c_in) >> 8;
-		uint16_t carry_7 = (((uint16_t)op8[0] & 0x7F) + (op8[1] & 0x7F) + c_in) >> 7;
-		uint16_t carry_4 = (((uint16_t)op8[0] & 0x0F) + (op8[1] & 0x0F) + c_in) >> 4;
+		bool carry_8 = (((uint16_t)op8[0] & 0xFF) + (op8[1] & 0xFF) + c_in) >> 8;
+		bool carry_7 = (((uint16_t)op8[0] & 0x7F) + (op8[1] & 0x7F) + c_in) >> 7;
+		bool carry_4 = (((uint16_t)op8[0] & 0x0F) + (op8[1] & 0x0F) + c_in) >> 4;
 
 		impl_flags_changed |= PSW_C | PSW_OV | PSW_HC;
 		impl_flags_out = (impl_flags_out & ~PSW_C) | (carry_8 ? PSW_C : 0);
@@ -278,7 +282,7 @@ namespace casioemu
 	void CPU::ZSCheck()
 	{
 		impl_flags_changed |= PSW_Z | PSW_S;
-		impl_flags_out = (impl_flags_out & ~PSW_Z) | (impl_flags_out & ((impl_operands[0].value & 0xFF) ? PSW_Z : 0));
+		impl_flags_out = (impl_flags_out & ~PSW_Z) | (impl_flags_out & ((impl_operands[0].value & 0xFF) ? 0 : PSW_Z));
 		impl_flags_out = (impl_flags_out & ~PSW_S) | ((impl_operands[0].value & 0x80) ? PSW_S : 0);
 	}
 

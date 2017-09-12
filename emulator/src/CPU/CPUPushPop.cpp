@@ -28,7 +28,11 @@ namespace casioemu
 		if (impl_operands[1].value & 4)
 			Push16(reg_epsw[reg_psw & PSW_ELEVEL]);
 		if (impl_operands[1].value & 8)
-			Push16(reg_elr[reg_psw & PSW_ELEVEL]);
+		{
+			if (memory_model == MM_LARGE)
+				Push16(reg_lcsr);
+			Push16(reg_lr);
+		}
 		if (impl_operands[1].value & 1)
 			Push16(reg_ea);
 	}
@@ -49,7 +53,11 @@ namespace casioemu
 		if (impl_operands[0].value & 1)
 			reg_ea = Pop16();
 		if (impl_operands[0].value & 8)
+		{
 			reg_lr = Pop16();
+			if (memory_model == MM_LARGE)
+				reg_lcsr = Pop16() & 0x000F;
+		}
 		if (impl_operands[0].value & 4)
 			reg_psw = Pop16();
 		if (impl_operands[0].value & 2)

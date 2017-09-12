@@ -135,11 +135,11 @@ namespace casioemu
 		{&CPU::OP_DAS        , H_WB                     , 0x803F, {{1, 0x000F,  8}, {0,      0,  0}}},
 		{&CPU::OP_NEG        , H_WB                     , 0x805F, {{1, 0x000F,  8}, {0,      0,  0}}},
 		// * Bit Access Instructions
-		{&CPU::OP_BITMOD     ,                         0, 0xA000, {{1, 0x000F,  8}, {0, 0x0007,  4}}},
+		{&CPU::OP_BITMOD     ,                         0, 0xA000, {{0, 0x000F,  8}, {0, 0x0007,  4}}},
 		{&CPU::OP_BITMOD     ,        H_TI              , 0xA080, {{0,      0,  0}, {0, 0x0007,  4}}},
-		{&CPU::OP_BITMOD     ,                         0, 0xA002, {{1, 0x000F,  8}, {0, 0x0007,  4}}},
+		{&CPU::OP_BITMOD     ,                         0, 0xA002, {{0, 0x000F,  8}, {0, 0x0007,  4}}},
 		{&CPU::OP_BITMOD     ,        H_TI              , 0xA082, {{0,      0,  0}, {0, 0x0007,  4}}},
-		{&CPU::OP_BITMOD     ,                         0, 0xA001, {{1, 0x000F,  8}, {0, 0x0007,  4}}},
+		{&CPU::OP_BITMOD     ,                         0, 0xA001, {{0, 0x000F,  8}, {0, 0x0007,  4}}},
 		{&CPU::OP_BITMOD     ,        H_TI              , 0xA081, {{0,      0,  0}, {0, 0x0007,  4}}},
 		// * PSW Access Instructions
 		{&CPU::OP_PSW_OR     ,                         0, 0xED08, {{0,      0,  0}, {0,      0,  0}}},
@@ -241,6 +241,21 @@ namespace casioemu
 
 	CPU::CPU(Emulator &_emulator) : emulator(_emulator), reg_lr(reg_elr[0]), reg_lcsr(reg_ecsr[0]), reg_psw(reg_epsw[0])
 	{
+	}
+
+	CPU::~CPU()
+	{
+		delete[] opcode_dispatch;
+	}
+
+	void CPU::SetupInternals()
+	{
+		SetupOpcodeDispatch();
+		SetupRegisterProxies();
+	}
+
+	void CPU::SetupOpcodeDispatch()
+	{
 		opcode_dispatch = new OpcodeSource *[0x10000];
 		for (size_t ix = 0; ix != 0x10000; ++ix)
 			opcode_dispatch[ix] = nullptr;
@@ -274,44 +289,73 @@ namespace casioemu
 			}
 		}
 		delete[] permutation_buffer;
-
-		for (size_t ix = 0; ix != sizeof(register_record_sources) / sizeof(register_record_sources[0]); ++ix)
-		{
-			RegisterRecord &record = register_record_sources[ix];
-
-			if (record.stub)
-			{
-				RegisterStub *register_stub = &(this->*record.stub);
-				register_stub->name = record.name;
-				register_proxies[record.name] = register_stub;
-			}
-
-			if (record.stub_array)
-			{
-				if (record.array_size == 1)
-				{
-					RegisterStub *register_stub = &(this->*record.stub_array)[record.array_base];
-					register_stub->name = record.name;
-					register_proxies[record.name] = register_stub;
-				}
-				else
-				{
-					for (size_t rx = 0; rx != record.array_size; ++rx)
-					{
-						std::stringstream ss;
-						ss << record.name << rx;
-						RegisterStub *register_stub = &(this->*record.stub_array)[rx];
-						register_stub->name = ss.str();
-						register_proxies[ss.str()] = register_stub;
-					}
-				}
-			}
-		}
 	}
 
-	CPU::~CPU()
+	void CPU::SetupRegisterProxies()
 	{
-		delete[] opcode_dispatch;
+		// for (size_t ix = 0; ix != sizeof(register_record_sources) / sizeof(register_record_sources[0]); ++ix)
+		// {
+		// 	RegisterRecord &record = register_record_sources[ix];
+
+		// 	if (record.stub)
+		// 	{
+		// 		RegisterStub *register_stub = &(this->*record.stub);
+		// 		register_stub->name = record.name;
+		// 		register_proxies[record.name] = register_stub;
+		// 	}
+
+		// 	if (record.stub_array)
+		// 	{
+		// 		if (record.array_size == 1)
+		// 		{
+		// 			RegisterStub *register_stub = &(this->*record.stub_array)[record.array_base];
+		// 			register_stub->name = record.name;
+		// 			register_proxies[record.name] = register_stub;
+		// 		}
+		// 		else
+		// 		{
+		// 			for (size_t rx = 0; rx != record.array_size; ++rx)
+		// 			{
+		// 				std::stringstream ss;
+		// 				ss << record.name << rx;
+		// 				RegisterStub *register_stub = &(this->*record.stub_array)[rx];
+		// 				register_stub->name = ss.str();
+		// 				register_proxies[ss.str()] = register_stub;
+		// 			}
+		// 		}
+		// 	}
+		// }
+
+		*(CPU **)lua_newuserdata(emulator.lua_state, sizeof(CPU *)) = this;
+		lua_newtable(emulator.lua_state);
+		lua_pushcfunction(emulator.lua_state, [](lua_State *lua_state) {
+			CPU *cpu = *(CPU **)lua_topointer(lua_state, 1);
+			auto it = cpu->register_proxies.find(lua_tostring(lua_state, 2));
+			if (it == cpu->register_proxies.end())
+				return 0;
+			RegisterStub *reg_stub = it->second;
+			if (reg_stub->type_size == 1)
+				lua_pushinteger(lua_state, (uint8_t)reg_stub->raw);
+			else
+				lua_pushinteger(lua_state, (uint16_t)reg_stub->raw);
+			return 1;
+		});
+		lua_setfield(emulator.lua_state, -2, "__index");
+		lua_pushcfunction(emulator.lua_state, [](lua_State *lua_state) {
+			CPU *cpu = *(CPU **)lua_topointer(lua_state, 1);
+			auto it = cpu->register_proxies.find(lua_tostring(lua_state, 2));
+			if (it == cpu->register_proxies.end())
+				return 0;
+			RegisterStub *reg_stub = it->second;
+			if (reg_stub->type_size == 1)
+				reg_stub->raw = (uint8_t)lua_tointeger(lua_state, 3);
+			else
+				reg_stub->raw = (uint16_t)lua_tointeger(lua_state, 3);
+			return 0;
+		});
+		lua_setfield(emulator.lua_state, -2, "__newindex");
+		lua_setmetatable(emulator.lua_state, -2);
+		lua_setglobal(emulator.lua_state, "cpu");
 	}
 
 	uint16_t CPU::Fetch()
@@ -338,7 +382,7 @@ namespace casioemu
 		 */
 		reg_dsr	= 0;
 
-		for (auto proxy : register_proxies)
+		for (auto &proxy : register_proxies)
 		{
 			proxy.second->read = false;
 			proxy.second->written = false;

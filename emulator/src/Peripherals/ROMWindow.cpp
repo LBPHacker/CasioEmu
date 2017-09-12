@@ -9,28 +9,54 @@ namespace casioemu
 {
 	void ROMWindow::Initialise()
 	{
-		region = {
-			PL_ROMWINDOW_BASE, // * base
-			PL_ROMWINDOW_SIZE, // * size
-			"ROMWindow", // * description
+		region_0 = {
+			0x00000, // * base
+			0x08000, // * size
+			"ROM/Segment0", // * description
 			&emulator, // * userdata
 			[](MMURegion *region, size_t offset) {
-				uint16_t rom_data = ((Emulator *)(region->userdata))->chipset.mmu.ReadCode(offset & ~1);
-				if (offset & 1)
-					rom_data >>= 8;
-				return (uint8_t)rom_data;
+				return ((Emulator *)(region->userdata))->chipset.rom_data[offset];
 			}, // * read function
 			[](MMURegion *region, size_t offset, uint8_t data) {
-				logger::Info("ROMWindow::[region write lambda]: Attempt to write %02hhX to %06zX\n", data, offset);
+				logger::Info("ROM::[region write lambda]: attempt to write %02hhX to %06zX\n", data, offset);
 			} // * write function
 		};
+		emulator.chipset.mmu.RegisterRegion(&region_0);
 
-		emulator.chipset.mmu.RegisterRegion(&region);
+		region_1 = {
+			0x10000, // * base
+			0x10000, // * size
+			"ROM/Segment1", // * description
+			&emulator, // * userdata
+			[](MMURegion *region, size_t offset) {
+				return ((Emulator *)(region->userdata))->chipset.rom_data[offset];
+			}, // * read function
+			[](MMURegion *region, size_t offset, uint8_t data) {
+				logger::Info("ROM::[region write lambda]: attempt to write %02hhX to %06zX\n", data, offset);
+			} // * write function
+		};
+		emulator.chipset.mmu.RegisterRegion(&region_1);
+
+		region_8 = {
+			0x80000, // * base
+			0x10000, // * size
+			"ROM/Segment8", // * description
+			&emulator, // * userdata
+			[](MMURegion *region, size_t offset) {
+				return ((Emulator *)(region->userdata))->chipset.rom_data[offset - 0x80000];
+			}, // * read function
+			[](MMURegion *region, size_t offset, uint8_t data) {
+				logger::Info("ROM::[region write lambda]: attempt to write %02hhX to %06zX\n", data, offset);
+			} // * write function
+		};
+		emulator.chipset.mmu.RegisterRegion(&region_8);
 	}
 
 	void ROMWindow::Uninitialise()
 	{
-		emulator.chipset.mmu.UnregisterRegion(&region);
+		emulator.chipset.mmu.UnregisterRegion(&region_8);
+		emulator.chipset.mmu.UnregisterRegion(&region_1);
+		emulator.chipset.mmu.UnregisterRegion(&region_0);
 	}
 
 	void ROMWindow::Tick()

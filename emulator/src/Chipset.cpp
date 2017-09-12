@@ -21,6 +21,10 @@ namespace casioemu
 
 	void Chipset::ConstructPeripherals()
 	{
+		mmu.GenerateSegmentDispatch(0);
+		mmu.GenerateSegmentDispatch(1);
+		mmu.GenerateSegmentDispatch(8);
+
 		// * TODO: Add more peripherals here.
 		peripherals.push_front(new ROMWindow(emulator));
 		peripherals.push_front(new BatteryBackedRAM(emulator));
@@ -28,7 +32,7 @@ namespace casioemu
 
 	Chipset::~Chipset()
 	{
-		for (auto peripheral : peripherals)
+		for (auto &peripheral : peripherals)
 		{
 			peripheral->Uninitialise();
 			delete peripheral;
@@ -45,8 +49,11 @@ namespace casioemu
 			PANIC("std::ifstream failed: %s\n", strerror(errno));
 		rom_data = std::vector<unsigned char>((std::istreambuf_iterator<char>(rom_handle)), std::istreambuf_iterator<char>());
 
-		for (auto peripheral : peripherals)
+		for (auto &peripheral : peripherals)
 			peripheral->Initialise();
+
+		cpu.SetupInternals();
+		mmu.SetupInternals();
 	}
 
 	void Chipset::Reset()
@@ -174,9 +181,6 @@ namespace casioemu
 
 	void Chipset::Tick()
 	{
-		if (emulator.GetPaused())
-			return;
-
 		// * TODO: decrement delay counter, return if it's not 0
 
 		for (auto peripheral : peripherals)

@@ -20,8 +20,9 @@ namespace casioemu
 		{
 			size_t type_size;
 			std::string name;
-			uint16_t raw;
 			bool read, written;
+
+			uint16_t raw;
 		};
 
 		template<typename T>
@@ -95,9 +96,13 @@ namespace casioemu
 		} impl_operands[2];
 		size_t impl_hint;
 
+		void SetupOpcodeDispatch();
+		void SetupRegisterProxies();
+
 	public:
 		CPU(Emulator &emulator);
 		~CPU();
+		void SetupInternals();
 
 		/**
 		 * See 1.2.2.1 in the nX-U8 manual.
@@ -133,7 +138,7 @@ namespace casioemu
 
 		enum OpcodeHint
 		{
-			H_IE = 0x0001, // * Extend Immediate flag for arithmethic instructions.
+			H_IE = 0x0001, // * Extend Immediate flag for arithmetic instructions.
 			H_ST = 0x0002, // * Store flag for load/store/coprocessor instructions.
 			H_DW = 0x0004, // * Store a new DSR value.
 			H_DS = 0x0008, // * Instruction is a DSR prefix.

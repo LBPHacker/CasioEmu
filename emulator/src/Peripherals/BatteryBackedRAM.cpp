@@ -3,6 +3,10 @@
 #include "../MMU.hpp"
 #include "../Emulator.hpp"
 #include "../Chipset.hpp"
+#include "../Logger.hpp"
+
+#define PL_BATTERYBACKEDRAM_BASE 0x8000
+#define PL_BATTERYBACKEDRAM_SIZE 0x0E00
 
 namespace casioemu
 {
@@ -22,7 +26,6 @@ namespace casioemu
 				((uint8_t *)region->userdata)[offset - PL_BATTERYBACKEDRAM_BASE] = data;
 			} // * write function
 		};
-
 		emulator.chipset.mmu.RegisterRegion(&region);
 	}
 

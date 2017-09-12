@@ -4,5 +4,6 @@
 *.sublime-*
 models/*/*.bin
 models/*/*.asm
+models/*/*.names
 ignore/
 test/

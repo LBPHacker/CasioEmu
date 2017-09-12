@@ -15,11 +15,13 @@ namespace casioemu
 	private:
 		Emulator &emulator;
 
-		MMURegion **segment_0_dispatch;
+		MMURegion ***segment_dispatch;
 
 	public:
 		MMU(Emulator &emulator);
 		~MMU();
+		void SetupInternals();
+		void GenerateSegmentDispatch(size_t segment_index);
 		uint16_t ReadCode(size_t offset);
 		uint8_t ReadData(size_t offset);
 		void WriteData(size_t offset, uint8_t data);

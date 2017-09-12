@@ -8,7 +8,7 @@ namespace casioemu
 {
 	class ROMWindow : public Peripheral
 	{
-		MMURegion region;
+		MMURegion region_0, region_1, region_8;
 
 	public:
 		using Peripheral::Peripheral;

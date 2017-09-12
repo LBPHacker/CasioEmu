@@ -14,12 +14,12 @@ namespace casioemu
 
 	void CPU::OP_LS_R()
 	{
-		LoadStore(impl_operands[1].value | (((uint16_t)reg_r[impl_operands[1].value + 1]) << 8), impl_hint >> 8);
+		LoadStore(impl_operands[1].value, impl_hint >> 8);
 	}
 
 	void CPU::OP_LS_I_R()
 	{
-		LoadStore((impl_operands[1].value | (((uint16_t)reg_r[impl_operands[1].value + 1]) << 8)) + impl_long_imm, impl_hint >> 8);
+		LoadStore(impl_operands[1].value + impl_long_imm, impl_hint >> 8);
 	}
 
 	void CPU::OP_LS_BP()
@@ -51,7 +51,11 @@ namespace casioemu
 				reg_r[impl_operands[0].value + ix] = emulator.chipset.mmu.ReadData((((size_t)reg_dsr) << 16) | (offset + ix));
 
 		if (impl_hint & H_IA)
+		{
 			reg_ea += length;
+			if (length != 1)
+				reg_ea &= ~1;
+		}
 	}
 }
 

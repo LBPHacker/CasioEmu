@@ -32,7 +32,7 @@ namespace casioemu
 		if (!window)
 			PANIC("SDL_CreateWindow failed: %s\n", SDL_GetError());
 
-		chipset.SetupInternals();
+		SetupInternals();
 
 		window_surface = SDL_GetWindowSurface(window);
 
@@ -64,6 +64,40 @@ namespace casioemu
 		luaL_unref(lua_state, LUA_REGISTRYINDEX, lua_model_ref);
 		lua_close(lua_state);
 		delete &chipset;
+	}
+
+	void Emulator::SetupInternals()
+	{
+		*(Emulator **)lua_newuserdata(lua_state, sizeof(Emulator *)) = this;
+		lua_newtable(lua_state);
+		lua_newtable(lua_state);
+		lua_pushcfunction(lua_state, [](lua_State *lua_state) {
+			Emulator *emu = *(Emulator **)lua_topointer(lua_state, 1);
+			emu->Tick();
+			return 0;
+		});
+		lua_setfield(lua_state, -2, "tick");
+		lua_pushcfunction(lua_state, [](lua_State *lua_state) {
+			Emulator *emu = *(Emulator **)lua_topointer(lua_state, 1);
+			emu->Shutdown();
+			return 0;
+		});
+		lua_setfield(lua_state, -2, "shutdown");
+		lua_pushcfunction(lua_state, [](lua_State *lua_state) {
+			Emulator *emu = *(Emulator **)lua_topointer(lua_state, 1);
+			emu->SetPaused(lua_toboolean(lua_state, 2));
+			return 0;
+		});
+		lua_setfield(lua_state, -2, "set_paused");
+		lua_setfield(lua_state, -2, "__index");
+		lua_pushcfunction(lua_state, [](lua_State *lua_state) {
+			return 0;
+		});
+		lua_setfield(lua_state, -2, "__newindex");
+		lua_setmetatable(lua_state, -2);
+		lua_setglobal(lua_state, "emu");
+
+		chipset.SetupInternals();
 	}
 
 	void Emulator::LoadModelDefition()
@@ -131,8 +165,15 @@ namespace casioemu
 	{
 		std::lock_guard<std::mutex> access_guard(access_lock);
 		Uint64 cycles_to_emulate = cycles.GetDelta();
-		for (Uint64 ix = 0; ix != cycles_to_emulate; ++ix)
-			chipset.Tick();
+
+		if (!paused)
+			for (Uint64 ix = 0; ix != cycles_to_emulate; ++ix)
+				Tick();
+	}
+
+	void Emulator::Tick()
+	{
+		chipset.Tick();
 	}
 
 	bool Emulator::Running()
@@ -150,31 +191,30 @@ namespace casioemu
 		running = false;
 	}
 
-	bool Emulator::ExecuteCommand(std::string command)
+	void Emulator::ExecuteCommand(std::string command)
 	{
-		command_buffer.append(command);
-
-		if (luaL_loadstring(lua_state, command_buffer.c_str()) != LUA_OK)
+		const char *ugly_string_data_ptr = command.c_str();
+		if (lua_load(lua_state, [](lua_State *lua_state, void *data, size_t *size) {
+			char **ugly_string_data_ptr_ptr = (char **)data;
+			if (!*ugly_string_data_ptr_ptr)
+				return (const char *)nullptr;
+			const char *result = *ugly_string_data_ptr_ptr;
+			*size = strlen(result);
+			*ugly_string_data_ptr_ptr = nullptr;
+			return result;
+		}, &ugly_string_data_ptr, "stdin", "t") != LUA_OK)
 		{
-			if (!strstr(lua_tostring(lua_state, -1), "<eof>"))
-			{
-				command_buffer.clear();
-				logger::Info("[Console input] %s\n", lua_tostring(lua_state, -1));
-			}
-
+			logger::Info("%s\n", lua_tostring(lua_state, -1));
 			lua_pop(lua_state, 1);
-			return command_buffer.empty();
+			return;
 		}
 
-		command_buffer.clear();
 		if (lua_pcall(lua_state, 0, 0, 0) != LUA_OK)
 		{
-			logger::Info("[Console input] %s\n", lua_tostring(lua_state, -1));
+			logger::Info("%s\n", lua_tostring(lua_state, -1));
 			lua_pop(lua_state, 1);
-			return true;
+			return;
 		}
-
-		return true;
 	}
 
 	void Emulator::SetPaused(bool _paused)

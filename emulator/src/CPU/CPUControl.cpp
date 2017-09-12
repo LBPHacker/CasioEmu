@@ -88,7 +88,11 @@ namespace casioemu
 				reg_cr[op0_index + ix] = emulator.chipset.mmu.ReadData((((size_t)reg_dsr) << 16) | (uint16_t)(reg_ea + ix));
 
 		if (impl_hint & H_IA)
+		{
 			reg_ea += register_size;
+			if (register_size != 1)
+				reg_ea &= ~1;
+		}
 	}
 
 	// * PSW Access Instructions
@@ -139,7 +143,10 @@ namespace casioemu
 		}
 
 		if (branch)
-			reg_pc += impl_operands[0].value * 2;
+		{
+			impl_operands[0].value |= (impl_operands[0].value & 0x80) ? 0x7F00 : 0;
+			reg_pc += impl_operands[0].value << 1;
+		}
 	}
 
 	// * Software Interrupt Instructions
