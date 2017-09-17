@@ -63,6 +63,7 @@ namespace casioemu
 		void LoadModelDefition();
 		void LoadInterfaceImage();
 		void TimerCallback();
+		void SetupLuaAPI();
 		void SetupInternals();
 		void RunStartupScript();
 
@@ -70,7 +71,7 @@ namespace casioemu
 		Emulator(std::map<std::string, std::string> &argv_map, Uint32 timer_interval, Uint32 cycles_per_second, bool paused = false);
 		~Emulator();
 
-		std::mutex access_lock;
+		std::mutex access_mx;
 
 		/**
 		 * A reference to the emulator chipset. This object holds all CPU, MMU, memory and

@@ -6,6 +6,8 @@
 #include <thread>
 #include <string>
 #include <map>
+#include <mutex>
+#include <condition_variable>
 
 #include "Emulator.hpp"
 #include "Logger.hpp"
@@ -51,14 +53,12 @@ int main(int argc, char *argv[])
 	{
 		casioemu::Emulator emulator(argv_map, 20, 32768);
 
-		std::thread console_input_thread([&emulator]() {
-			/**
-			 * TODO: Make this remotely invoke `ExecuteCommand` in the main thread
-			 * (and wait for completion with a condition variable or something)
-			 * as SDL video functions are not thread-safe. I hope this won't bite
-			 * me in the bum later. :/
-			 */
-			std::string console_input_str;
+		std::mutex input_mx;
+		std::condition_variable input_cv;
+		bool input_processed;
+		std::string console_input_str;
+		Uint32 console_input_event = SDL_RegisterEvents(1);
+		std::thread console_input_thread([&] {
 			while (1)
 			{
 				std::cout << "> ";
@@ -68,8 +68,17 @@ int main(int argc, char *argv[])
 					casioemu::logger::Info("Console thread shutting down\n");
 					break;
 				}
-				std::lock_guard<std::mutex> access_guard(emulator.access_lock);
-				emulator.ExecuteCommand(console_input_str);
+
+				input_processed = false;
+				SDL_Event event;
+				SDL_zero(event);
+				event.type = console_input_event;
+				SDL_PushEvent(&event);
+
+				std::unique_lock<std::mutex> input_lock(input_mx);
+				input_cv.wait(input_lock, [&] {
+					return input_processed;
+				});
 			}
 		});
 		console_input_thread.detach();
@@ -82,11 +91,24 @@ int main(int argc, char *argv[])
 
 			switch (event.type)
 			{
+			case SDL_USEREVENT:
+				if (event.type == console_input_event)
+				{
+					{
+						std::lock_guard<std::mutex> input_lock(input_mx);
+						std::lock_guard<std::mutex> access_lock(emulator.access_mx);
+						emulator.ExecuteCommand(console_input_str);
+						input_processed = true;
+					}
+					input_cv.notify_one();
+				}
+				break;
+
 			case SDL_WINDOWEVENT:
 				switch (event.window.event)
 				{
 				case SDL_WINDOWEVENT_CLOSE:
-					std::lock_guard<std::mutex> access_guard(emulator.access_lock);
+					std::lock_guard<std::mutex> access_lock(emulator.access_mx);
 					emulator.Shutdown();
 					break;
 				}

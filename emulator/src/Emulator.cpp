@@ -11,7 +11,7 @@ namespace casioemu
 {
 	Emulator::Emulator(std::map<std::string, std::string> &_argv_map, Uint32 _timer_interval, Uint32 _cycles_per_second, bool _paused) : paused(_paused), argv_map(_argv_map), cycles(_cycles_per_second), chipset(*new Chipset(*this))
 	{
-		std::lock_guard<std::mutex> access_guard(access_lock);
+		std::lock_guard<std::mutex> access_lock(access_mx);
 		running = true;
 		timer_interval = _timer_interval;
 		model_path = argv_map["model"];
@@ -19,7 +19,9 @@ namespace casioemu
 		lua_state = luaL_newstate();
 		luaL_openlibs(lua_state);
 
+		SetupLuaAPI();
 		LoadModelDefition();
+		SetupInternals();
 
 		window = SDL_CreateWindow(
 			std::string(GetModelInfo("model_name")).c_str(),
@@ -31,8 +33,6 @@ namespace casioemu
 		);
 		if (!window)
 			PANIC("SDL_CreateWindow failed: %s\n", SDL_GetError());
-
-		SetupInternals();
 
 		window_surface = SDL_GetWindowSurface(window);
 
@@ -60,7 +60,7 @@ namespace casioemu
 
 	Emulator::~Emulator()
 	{
-		std::lock_guard<std::mutex> access_guard(access_lock);
+		std::lock_guard<std::mutex> access_lock(access_mx);
 		SDL_RemoveTimer(timer_id);
 
 	    SDL_FreeSurface(interface_image_surface);
@@ -91,7 +91,7 @@ namespace casioemu
 		}
 	}
 
-	void Emulator::SetupInternals()
+	void Emulator::SetupLuaAPI()
 	{
 		*(Emulator **)lua_newuserdata(lua_state, sizeof(Emulator *)) = this;
 		lua_newtable(lua_state);
@@ -114,6 +114,12 @@ namespace casioemu
 			return 0;
 		});
 		lua_setfield(lua_state, -2, "set_paused");
+		lua_pushcfunction(lua_state, [](lua_State *lua_state) {
+			Emulator *emu = *(Emulator **)lua_topointer(lua_state, 1);
+			emu->lua_model_ref = luaL_ref(lua_state, LUA_REGISTRYINDEX);
+			return 0;
+		});
+		lua_setfield(lua_state, -2, "model");
 		lua_setfield(lua_state, -2, "__index");
 		lua_pushcfunction(lua_state, [](lua_State *lua_state) {
 			return 0;
@@ -121,19 +127,25 @@ namespace casioemu
 		lua_setfield(lua_state, -2, "__newindex");
 		lua_setmetatable(lua_state, -2);
 		lua_setglobal(lua_state, "emu");
+	}
 
+	void Emulator::SetupInternals()
+	{
 		chipset.SetupInternals();
 	}
 
 	void Emulator::LoadModelDefition()
 	{
+		lua_model_ref = 0;
+
 		if (luaL_loadfile(lua_state, (model_path + "/model.lua").c_str()) != LUA_OK)
 			PANIC("LoadModelDefition failed: %s\n", lua_tostring(lua_state, -1));
 
-		if (lua_pcall(lua_state, 0, 1, 0) != LUA_OK)
+		if (lua_pcall(lua_state, 0, 0, 0) != LUA_OK)
 			PANIC("LoadModelDefition failed: %s\n", lua_tostring(lua_state, -1));
 
-		lua_model_ref = luaL_ref(lua_state, LUA_REGISTRYINDEX);
+		if (!lua_model_ref)
+			PANIC("LoadModelDefition failed: model failed to call emu.model\n");
 	}
 
 	Emulator::ModelInfo Emulator::GetModelInfo(std::string key)
@@ -188,7 +200,7 @@ namespace casioemu
 
 	void Emulator::TimerCallback()
 	{
-		std::lock_guard<std::mutex> access_guard(access_lock);
+		std::lock_guard<std::mutex> access_lock(access_mx);
 		Uint64 cycles_to_emulate = cycles.GetDelta();
 
 		if (!paused)
