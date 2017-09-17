@@ -226,6 +226,7 @@ namespace casioemu
 		// * Coprocessor Data Transfer Instructions
 		void OP_CR_R();
 		void OP_CR_EA();
+		void BumpEA(size_t value_size);
 		// * EA Register Data Transfer Instructions
 		void OP_LEA();
 		// * ALU Instructions

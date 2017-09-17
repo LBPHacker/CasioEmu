@@ -9,8 +9,8 @@ namespace casioemu
 	// * Control Register Access Instructions
 	void CPU::OP_ADDSP()
 	{
-		impl_operands[1].value |= (impl_operands[1].value & 0x80) ? 0xFF00 : 0;
-		reg_sp += impl_operands[1].value;
+		impl_operands[0].value |= (impl_operands[0].value & 0x80) ? 0xFF00 : 0;
+		reg_sp += impl_operands[0].value;
 	}
 
 	void CPU::OP_CTRL()
@@ -88,11 +88,14 @@ namespace casioemu
 				reg_cr[op0_index + ix] = emulator.chipset.mmu.ReadData((((size_t)reg_dsr) << 16) | (uint16_t)(reg_ea + ix));
 
 		if (impl_hint & H_IA)
-		{
-			reg_ea += register_size;
-			if (register_size != 1)
-				reg_ea &= ~1;
-		}
+			BumpEA(register_size);
+	}
+
+	void CPU::BumpEA(size_t value_size)
+	{
+		reg_ea += value_size;
+		if (value_size != 1)
+			reg_ea &= ~1;
 	}
 
 	// * PSW Access Instructions
@@ -118,7 +121,7 @@ namespace casioemu
 		bool z = impl_flags_in & PSW_Z;
 		bool s = impl_flags_in & PSW_S;
 		bool ov = impl_flags_in & PSW_OV;
-		bool le = z & c;
+		bool le = z | c;
 		bool lts = ov ^ s;
 		bool les = lts | z;
 

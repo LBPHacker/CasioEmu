@@ -29,8 +29,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.0000002"
-     inkscape:cx="166.08143"
-     inkscape:cy="427.87277"
+     inkscape:cx="80.831439"
+     inkscape:cy="507.87276"
      inkscape:document-units="px"
      inkscape:current-layer="layer2"
      showgrid="true"
@@ -122,14 +122,6 @@
        d="M 135.0011,705.36216 A 32.999877,30.50039 0 0 0 102,735.86115 32.999877,30.50039 0 0 0 135.0011,766.36216 32.999877,30.50039 0 0 0 168,735.86115 32.999877,30.50039 0 0 0 135.0011,705.36216 Z"
        id="path4222"
        inkscape:connector-curvature="0" />
-    <rect
-       style="opacity:1;fill:#311d16;fill-opacity:1;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       id="rect4718"
-       width="109.28571"
-       height="40"
-       x="122.85714"
-       y="537.005"
-       ry="5.7142859" />
     <path
        inkscape:connector-curvature="0"
        id="path4320"
@@ -360,6 +352,32 @@
        style="opacity:1;fill:#41415a;fill-opacity:1;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        d="m 81.30838,711.36979 a 17.424558,12.387246 7.914537 0 0 -16.20129,9.939 17.424558,12.387246 7.914537 0 0 15.31083,14.79242 17.424558,12.387246 7.914537 0 0 12.30867,-1.5746 12.319175,17.520838 10.014458 0 1 0.29232,-6.98322 A 12.319175,17.520838 10.014458 0 1 97,718.21566 17.424558,12.387246 7.914537 0 0 84.2663,711.62707 17.424558,12.387246 7.914537 0 0 81.30838,711.36979 Z"
        id="path4491" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer5"
+     inkscape:label="solar"
+     style="display:none">
+    <rect
+       style="display:inline;opacity:1;fill:#311d16;fill-opacity:1;stroke:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect4718-3"
+       width="109.28571"
+       height="40"
+       x="122.85714"
+       y="24.642845"
+       ry="5.7142859" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:6.44303989px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;fill:#060606;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="171.69221"
+       y="73.553825"
+       id="text4790-7-6"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4792-5-7"
+         x="171.69221"
+         y="73.553825"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:arial;-inkscape-font-specification:'arial Bold';fill:#060606;fill-opacity:1">TWO WAY POWER</tspan></text>
   </g>
   <g
      inkscape:groupmode="layer"
@@ -2736,25 +2754,12 @@
      inkscape:label="unsafetext"
      style="display:inline">
     <g
-       style="display:inline"
-       id="g4593-3">
+       id="g4616">
       <path
          inkscape:connector-curvature="0"
          id="path69956-6"
          d="m 73.414062,24.181641 c -2.011374,-0.007 -3.875602,0.05728 -4.691406,0.873047 -0.710308,0.703316 -0.800764,1.405604 -0.871094,2.404296 -0.119557,1.905866 1.272086,2.533226 2.087891,2.779297 1.061943,0.323519 3.101843,0.117931 5.429688,0.371094 0.506359,0.05628 0.716412,0.246385 0.695312,0.794922 -0.02813,0.541559 -0.58279,0.738994 -0.695312,0.746094 -1.905878,0.105475 -2.427079,0.17583 -3.671875,0 -0.492288,-0.07733 -0.696109,-0.400688 -0.667969,-0.84375 l -3.199219,0 c 0,0 -0.02819,0.998338 0.246094,1.546875 0.295374,0.611912 0.717807,1.187889 1.484375,1.384765 1.617538,0.422013 3.115419,0.303975 4.050781,0.296875 1.160405,0 2.903298,-0.08545 3.916016,-0.345703 1.139309,-0.302469 1.801169,-1.595767 1.787109,-2.8125 -0.02814,-2.102746 -1.140135,-2.630091 -1.611328,-2.798828 -0.970528,-0.358758 -2.939723,-0.337492 -3.523437,-0.351563 -2.454437,-0.04221 -3.277746,-0.01539 -3.228516,-0.894531 0.03517,-0.569587 0.352645,-0.757849 0.732422,-0.792969 1.357318,-0.119545 2.123936,-0.140708 3.417968,0 0.400863,0.04919 0.618355,0.357678 0.646485,0.871094 l 3.080078,0 c 0.02813,-0.822862 -0.357274,-1.878035 -1.025391,-2.503906 -0.639975,-0.597729 -1.885008,-0.717609 -4.388672,-0.724609 z m -25.142578,0.0078 c -2.327845,0.0071 -4.184557,-0.02903 -5.126953,0.941406 -1.068977,1.111258 -1.055473,2.602828 -1.027343,4.339844 0.01406,0.900196 -0.08382,2.953237 0.957031,3.994141 0.963481,0.970554 3.473834,1.069155 5.28125,1.041015 2.004339,-0.0421 3.651289,0.09862 4.910156,-0.667968 1.019742,-0.61889 1.391828,-2.256882 1.244141,-3.269532 -1.13931,0 -2.293514,-0.02116 -3.355469,0 -0.06328,0.393758 0.106366,0.745998 -0.414063,1.097657 -0.471193,0.309441 -4.142088,0.133174 -4.613281,0.08398 -0.428992,-0.04221 -0.577321,-0.387849 -0.675781,-0.837891 -0.147688,-0.689246 -0.04923,-2.924102 0,-3.121093 0.126592,-0.513304 0.127232,-0.775353 0.675781,-0.845704 0.717342,-0.09839 3.845981,-0.168415 4.359375,0.02148 0.597781,0.225021 0.618355,0.499023 0.646484,1.019531 l 3.306641,0 C 54.629342,26.446078 53.84236,25.2224 53.019531,24.708984 52.133406,24.160446 50.219563,24.182453 48.271484,24.189453 Z m 43.097657,0.0078 c -1.315127,-0.01407 -1.548618,0.0054 -2.533203,0.05469 -2.728707,0.140596 -3.59261,1.723015 -3.59961,4.050781 l 0,2.322266 c 0.007,2.672445 0.998125,3.643248 4.275391,3.826172 0.724378,0.03512 0.633721,0.0625 1.857422,0.0625 1.13931,0 1.16,-0.02738 1.898437,-0.0625 3.333527,-0.182924 4.22575,-1.153727 4.21875,-3.826172 l 0,-2.376953 c 0.007,-2.475454 -0.835709,-3.728861 -3.705078,-3.996094 -0.935362,-0.08442 -0.822701,-0.04062 -2.412109,-0.05469 z m -32.478516,0.167968 -4.283203,9.894532 3.396484,0 0.71875,-1.6875 4.740235,0 0.703125,1.6875 3.439453,0 -4.142578,-9.894532 -4.572266,0 z m 21.662109,0 0,9.929688 3.275391,0 0,-9.929688 -3.275391,0 z m -19.601562,2.279297 0.470703,0 c 0,0 0.985857,2.593527 1.386719,3.824219 l -3.347656,0 1.490234,-3.824219 z m 30.398437,0.208985 c 0.486141,0 0.979535,0.02539 1.69336,0.07813 0.647011,0.0493 1.130462,0.09155 1.179687,1.18164 0.0422,0.97055 0.05626,1.483443 0,2.496094 -0.04923,0.928337 -0.532676,1.13245 -1.179687,1.181641 -1.251832,0.09152 -2.095825,0.09152 -3.347657,0 -0.647009,-0.04919 -1.056224,-0.175858 -1.175781,-1.181641 -0.119557,-0.963459 -0.105497,-1.62404 0,-2.496094 0.119557,-1.054862 0.528772,-1.132336 1.175781,-1.18164 0.689212,-0.05274 1.168157,-0.07813 1.654297,-0.07813 z"
          style="fill:#060606;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.079;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none" />
-      <text
-         sodipodi:linespacing="125%"
-         id="text4790-7"
-         y="73.553825"
-         x="171.69221"
-         style="font-style:normal;font-weight:normal;font-size:6.44303989px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#060606;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-         xml:space="preserve"><tspan
-           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:arial;-inkscape-font-specification:'arial Bold';fill:#060606;fill-opacity:1"
-           y="73.553825"
-           x="171.69221"
-           id="tspan4792-5"
-           sodipodi:role="line">TWO WAY POWER</tspan></text>
       <text
          xml:space="preserve"
          style="font-style:normal;font-weight:normal;font-size:10.1013813px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#060606;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"

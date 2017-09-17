@@ -49,16 +49,25 @@ int main(int argc, char *argv[])
 		PANIC("IMG_Init failed: %s\n", IMG_GetError());
 
 	{
-		casioemu::Emulator emulator(argv_map["model"], 20, 32768);
-		if (argv_map.find("paused") != argv_map.end())
-			emulator.SetPaused(true);
+		casioemu::Emulator emulator(argv_map, 20, 32768);
 
 		std::thread console_input_thread([&emulator]() {
+			/**
+			 * TODO: Make this remotely invoke `ExecuteCommand` in the main thread
+			 * (and wait for completion with a condition variable or something)
+			 * as SDL video functions are not thread-safe. I hope this won't bite
+			 * me in the bum later. :/
+			 */
 			std::string console_input_str;
 			while (1)
 			{
 				std::cout << "> ";
 				std::getline(std::cin, console_input_str);
+				if (std::cin.fail())
+				{
+					casioemu::logger::Info("Console thread shutting down\n");
+					break;
+				}
 				std::lock_guard<std::mutex> access_guard(emulator.access_lock);
 				emulator.ExecuteCommand(console_input_str);
 			}

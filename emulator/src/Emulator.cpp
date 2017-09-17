@@ -9,12 +9,12 @@
 
 namespace casioemu
 {
-	Emulator::Emulator(std::string _model_path, Uint32 _timer_interval, Uint32 _cycles_per_second, bool _paused) : paused(_paused), cycles(_cycles_per_second), chipset(*new Chipset(*this))
+	Emulator::Emulator(std::map<std::string, std::string> &_argv_map, Uint32 _timer_interval, Uint32 _cycles_per_second, bool _paused) : paused(_paused), argv_map(_argv_map), cycles(_cycles_per_second), chipset(*new Chipset(*this))
 	{
 		std::lock_guard<std::mutex> access_guard(access_lock);
 		running = true;
 		timer_interval = _timer_interval;
-		model_path = _model_path;
+		model_path = argv_map["model"];
 
 		lua_state = luaL_newstate();
 		luaL_openlibs(lua_state);
@@ -50,7 +50,12 @@ namespace casioemu
 			return emulator->timer_interval;
 		}, this);
 
+		RunStartupScript();
+
 		chipset.Reset();
+
+		if (argv_map.find("paused") != argv_map.end())
+			SetPaused(true);
 	}
 
 	Emulator::~Emulator()
@@ -64,6 +69,26 @@ namespace casioemu
 		luaL_unref(lua_state, LUA_REGISTRYINDEX, lua_model_ref);
 		lua_close(lua_state);
 		delete &chipset;
+	}
+
+	void Emulator::RunStartupScript()
+	{
+		if (argv_map.find("script") == argv_map.end())
+			return;
+
+		if (luaL_loadfile(lua_state, argv_map["script"].c_str()) != LUA_OK)
+		{
+			logger::Info("%s\n", lua_tostring(lua_state, -1));
+			lua_pop(lua_state, 1);
+			return;
+		}
+
+		if (lua_pcall(lua_state, 0, 1, 0) != LUA_OK)
+		{
+			logger::Info("%s\n", lua_tostring(lua_state, -1));
+			lua_pop(lua_state, 1);
+			return;
+		}
 	}
 
 	void Emulator::SetupInternals()

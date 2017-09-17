@@ -23,6 +23,7 @@ namespace casioemu
 		bool running, paused;
 		Uint32 last_frame_tick_count;
 		std::string model_path;
+		std::map<std::string, std::string> &argv_map;
 
 		lua_State *lua_state;
 		int lua_model_ref;
@@ -63,9 +64,10 @@ namespace casioemu
 		void LoadInterfaceImage();
 		void TimerCallback();
 		void SetupInternals();
+		void RunStartupScript();
 
 	public:
-		Emulator(std::string model_path, Uint32 timer_interval, Uint32 cycles_per_second, bool paused = false);
+		Emulator(std::map<std::string, std::string> &argv_map, Uint32 timer_interval, Uint32 cycles_per_second, bool paused = false);
 		~Emulator();
 
 		std::mutex access_lock;

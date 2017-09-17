@@ -218,21 +218,10 @@ namespace casioemu
 
 	void CPU::OP_NOP()
 	{
-		/**
-		 * NOP
-		 * Literally do nothing.
-		 */
 	}
 
 	void CPU::OP_DSR()
 	{
-		/**
-		 * OP_DSR
-		 * Recall `impl_last_dsr` into `reg_dsr`.
-		 *
-		 * Hint 1: Store an immediate DSR value into `impl_last_dsr` to be recalled by OP_DSR.
-		 */
-
 		if (impl_hint & H_DW)
 			impl_last_dsr = impl_operands[0].value;
 
@@ -293,38 +282,38 @@ namespace casioemu
 
 	void CPU::SetupRegisterProxies()
 	{
-		// for (size_t ix = 0; ix != sizeof(register_record_sources) / sizeof(register_record_sources[0]); ++ix)
-		// {
-		// 	RegisterRecord &record = register_record_sources[ix];
+		for (size_t ix = 0; ix != sizeof(register_record_sources) / sizeof(register_record_sources[0]); ++ix)
+		{
+			RegisterRecord &record = register_record_sources[ix];
 
-		// 	if (record.stub)
-		// 	{
-		// 		RegisterStub *register_stub = &(this->*record.stub);
-		// 		register_stub->name = record.name;
-		// 		register_proxies[record.name] = register_stub;
-		// 	}
+			if (record.stub)
+			{
+				RegisterStub *register_stub = &(this->*record.stub);
+				register_stub->name = record.name;
+				register_proxies[record.name] = register_stub;
+			}
 
-		// 	if (record.stub_array)
-		// 	{
-		// 		if (record.array_size == 1)
-		// 		{
-		// 			RegisterStub *register_stub = &(this->*record.stub_array)[record.array_base];
-		// 			register_stub->name = record.name;
-		// 			register_proxies[record.name] = register_stub;
-		// 		}
-		// 		else
-		// 		{
-		// 			for (size_t rx = 0; rx != record.array_size; ++rx)
-		// 			{
-		// 				std::stringstream ss;
-		// 				ss << record.name << rx;
-		// 				RegisterStub *register_stub = &(this->*record.stub_array)[rx];
-		// 				register_stub->name = ss.str();
-		// 				register_proxies[ss.str()] = register_stub;
-		// 			}
-		// 		}
-		// 	}
-		// }
+			if (record.stub_array)
+			{
+				if (record.array_size == 1)
+				{
+					RegisterStub *register_stub = &(this->*record.stub_array)[record.array_base];
+					register_stub->name = record.name;
+					register_proxies[record.name] = register_stub;
+				}
+				else
+				{
+					for (size_t rx = 0; rx != record.array_size; ++rx)
+					{
+						std::stringstream ss;
+						ss << record.name << rx;
+						RegisterStub *register_stub = &(this->*record.stub_array)[rx];
+						register_stub->name = ss.str();
+						register_proxies[ss.str()] = register_stub;
+					}
+				}
+			}
+		}
 
 		*(CPU **)lua_newuserdata(emulator.lua_state, sizeof(CPU *)) = this;
 		lua_newtable(emulator.lua_state);
@@ -417,6 +406,12 @@ namespace casioemu
 
 			impl_flags_changed = 0;
 			impl_flags_in = reg_psw;
+			/**
+			 * Yes, Z is always set to 1. While `impl_flags_changed` may not have
+			 * PSW_Z set, `impl_flags_out` does as most of the time Z is calculated
+			 * by one or more calls to `ZSCheck`. `ZSCheck` only changes Z if the
+			 * value it checks is non-zero, otherwise it leaves it alone.
+			 */
 			impl_flags_out = PSW_Z;
 			(this->*(handler->handler_function))();
 			reg_psw &= ~impl_flags_changed;

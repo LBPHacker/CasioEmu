@@ -18,6 +18,8 @@ namespace casioemu
 		if (impl_hint & H_IE)
 			impl_operands[1].value |= (impl_operands[1].value & 0x40) ? 0xFF80 : 0;
 
+		impl_flags_in &= ~PSW_C;
+
 		uint8_t op_high_0 = impl_operands[0].value >> 8;
 		uint8_t op_high_1 = impl_operands[1].value >> 8;
 		Add8();
@@ -81,7 +83,10 @@ namespace casioemu
 
 	void CPU::OP_CMP16()
 	{
-		uint8_t op_high[2] = {(uint8_t)(impl_operands[0].value >> 8), (uint8_t)(impl_operands[1].value >> 8)};
+		impl_flags_in &= ~PSW_C;
+
+		uint8_t op_high_0 = impl_operands[0].value >> 8;
+		uint8_t op_high_1 = impl_operands[1].value >> 8;
 		impl_operands[0].value ^= 0xFF;
 		Add8();
 		impl_operands[0].value ^= 0xFF;
@@ -89,12 +94,15 @@ namespace casioemu
 
 		impl_flags_in = (impl_flags_in & ~PSW_C) | (impl_flags_out & PSW_C);
 
-		for (size_t ix = 0; ix != sizeof(impl_operands) / sizeof(impl_operands[0]); ++ix)
-			impl_operands[ix].value = op_high[ix];
+		uint8_t op_low_0 = impl_operands[0].value;
+		impl_operands[0].value = op_high_0;
+		impl_operands[1].value = op_high_1;
 		impl_operands[0].value ^= 0xFF;
 		Add8();
 		impl_operands[0].value ^= 0xFF;
 		ZSCheck();
+
+		impl_operands[0].value = (impl_operands[0].value << 8) | op_low_0;
 	}
 
 	void CPU::OP_SUB()
@@ -155,6 +163,7 @@ namespace casioemu
 		if ((impl_operands[0].value & 0x0F) > 0x09 || (impl_flags_in & PSW_HC)) impl_operands[1].value += 0x06;
 		if ((impl_operands[0].value & 0xF0) > 0x90 || (impl_flags_in &  PSW_C)) impl_operands[1].value += 0x60;
 		OP_ADD();
+		impl_flags_out &= ~PSW_OV;
 	}
 
 	void CPU::OP_DAS()
@@ -163,6 +172,7 @@ namespace casioemu
 		if ((impl_operands[0].value & 0x0F) > 0x09 || (impl_flags_in & PSW_HC)) impl_operands[1].value += 0x06;
 		if ((impl_operands[0].value & 0xF0) > 0x90 || (impl_flags_in &  PSW_C)) impl_operands[1].value += 0x60;
 		OP_SUB();
+		impl_flags_out &= ~PSW_OV;
 	}
 
 	void CPU::OP_NEG()
@@ -175,12 +185,18 @@ namespace casioemu
 	// * Bit Access Instructions
 	void CPU::OP_BITMOD()
 	{
-		size_t src_index = impl_operands[0].value;
+		size_t src_index;
 		uint64_t bit_in = 1 << impl_operands[1].value;
 		if (impl_hint & H_TI)
+		{
+			src_index = impl_long_imm;
 			impl_operands[0].value = emulator.chipset.mmu.ReadData((((size_t)reg_dsr) << 16) | src_index);
+		}
 		else
+		{
+			src_index = impl_operands[0].value;
 			impl_operands[0].value = reg_r[src_index];
+		}
 
 		impl_flags_changed |= PSW_Z;
 		impl_flags_out = (impl_operands[0].value & bit_in) ? 0 : PSW_Z;
@@ -282,7 +298,8 @@ namespace casioemu
 	void CPU::ZSCheck()
 	{
 		impl_flags_changed |= PSW_Z | PSW_S;
-		impl_flags_out = (impl_flags_out & ~PSW_Z) | (impl_flags_out & ((impl_operands[0].value & 0xFF) ? 0 : PSW_Z));
+		if (impl_operands[0].value & 0xFF)
+			impl_flags_out &= ~PSW_Z;
 		impl_flags_out = (impl_flags_out & ~PSW_S) | ((impl_operands[0].value & 0x80) ? PSW_S : 0);
 	}
 
