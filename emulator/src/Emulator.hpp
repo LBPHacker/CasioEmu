@@ -26,7 +26,7 @@ namespace casioemu
 		std::map<std::string, std::string> &argv_map;
 
 		lua_State *lua_state;
-		int lua_model_ref;
+		int lua_model_ref, lua_pre_tick_ref, lua_post_tick_ref;
 
 		/**
 		 * The cycle manager structure. This structure is reset every time the

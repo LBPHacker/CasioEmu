@@ -114,12 +114,31 @@ namespace casioemu
 			return 0;
 		});
 		lua_setfield(lua_state, -2, "set_paused");
+		lua_model_ref = LUA_REFNIL;
 		lua_pushcfunction(lua_state, [](lua_State *lua_state) {
 			Emulator *emu = *(Emulator **)lua_topointer(lua_state, 1);
+			if (emu->lua_model_ref != LUA_REFNIL)
+				PANIC("emu.model invoked twice\n");
 			emu->lua_model_ref = luaL_ref(lua_state, LUA_REGISTRYINDEX);
 			return 0;
 		});
 		lua_setfield(lua_state, -2, "model");
+		lua_pre_tick_ref = LUA_REFNIL;
+		lua_pushcfunction(lua_state, [](lua_State *lua_state) {
+			Emulator *emu = *(Emulator **)lua_topointer(lua_state, 1);
+			luaL_unref(lua_state, LUA_REGISTRYINDEX, emu->lua_pre_tick_ref);
+			emu->lua_pre_tick_ref = luaL_ref(lua_state, LUA_REGISTRYINDEX);
+			return 0;
+		});
+		lua_setfield(lua_state, -2, "pre_tick");
+		lua_post_tick_ref = LUA_REFNIL;
+		lua_pushcfunction(lua_state, [](lua_State *lua_state) {
+			Emulator *emu = *(Emulator **)lua_topointer(lua_state, 1);
+			luaL_unref(lua_state, LUA_REGISTRYINDEX, emu->lua_post_tick_ref);
+			emu->lua_post_tick_ref = luaL_ref(lua_state, LUA_REGISTRYINDEX);
+			return 0;
+		});
+		lua_setfield(lua_state, -2, "post_tick");
 		lua_setfield(lua_state, -2, "__index");
 		lua_pushcfunction(lua_state, [](lua_State *lua_state) {
 			return 0;
@@ -136,15 +155,13 @@ namespace casioemu
 
 	void Emulator::LoadModelDefition()
 	{
-		lua_model_ref = 0;
-
 		if (luaL_loadfile(lua_state, (model_path + "/model.lua").c_str()) != LUA_OK)
 			PANIC("LoadModelDefition failed: %s\n", lua_tostring(lua_state, -1));
 
 		if (lua_pcall(lua_state, 0, 0, 0) != LUA_OK)
 			PANIC("LoadModelDefition failed: %s\n", lua_tostring(lua_state, -1));
 
-		if (!lua_model_ref)
+		if (lua_model_ref == LUA_REFNIL)
 			PANIC("LoadModelDefition failed: model failed to call emu.model\n");
 	}
 
@@ -203,14 +220,40 @@ namespace casioemu
 		std::lock_guard<std::mutex> access_lock(access_mx);
 		Uint64 cycles_to_emulate = cycles.GetDelta();
 
-		if (!paused)
-			for (Uint64 ix = 0; ix != cycles_to_emulate; ++ix)
+		for (Uint64 ix = 0; ix != cycles_to_emulate; ++ix)
+			if (!paused)
 				Tick();
 	}
 
 	void Emulator::Tick()
 	{
+		if (lua_pre_tick_ref != LUA_REFNIL)
+		{
+			lua_rawgeti(lua_state, LUA_REGISTRYINDEX, lua_pre_tick_ref);
+			if (lua_pcall(lua_state, 0, 0, 0) != LUA_OK)
+			{
+				logger::Info("pre-tick hook failed: %s\n", lua_tostring(lua_state, -1));
+				lua_pop(lua_state, 1);
+				luaL_unref(lua_state, LUA_REGISTRYINDEX, lua_pre_tick_ref);
+				lua_pre_tick_ref = LUA_REFNIL;
+				logger::Info("  pre-tick hook unregistered\n", lua_tostring(lua_state, -1));
+			}
+		}
+
 		chipset.Tick();
+
+		if (lua_post_tick_ref != LUA_REFNIL)
+		{
+			lua_rawgeti(lua_state, LUA_REGISTRYINDEX, lua_post_tick_ref);
+			if (lua_pcall(lua_state, 0, 0, 0) != LUA_OK)
+			{
+				logger::Info("post-tick hook failed: %s\n", lua_tostring(lua_state, -1));
+				lua_pop(lua_state, 1);
+				luaL_unref(lua_state, LUA_REGISTRYINDEX, lua_post_tick_ref);
+				lua_post_tick_ref = LUA_REFNIL;
+				logger::Info("  post-tick hook unregistered\n", lua_tostring(lua_state, -1));
+			}
+		}
 	}
 
 	bool Emulator::Running()
