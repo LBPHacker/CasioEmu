@@ -62,5 +62,9 @@ namespace casioemu
 	void ROMWindow::Tick()
 	{
 	}
+
+	void ROMWindow::Frame()
+	{
+	}
 }
 

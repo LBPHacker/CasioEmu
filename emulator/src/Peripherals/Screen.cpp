@@ -36,4 +36,8 @@ namespace casioemu
 	void Screen::Tick()
 	{
 	}
+
+	void Screen::Frame()
+	{
+	}
 }

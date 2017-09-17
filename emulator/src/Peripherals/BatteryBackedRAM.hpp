@@ -17,6 +17,7 @@ namespace casioemu
 		void Initialise();
 		void Uninitialise();
 		void Tick();
+		void Frame();
 	};
 }
 

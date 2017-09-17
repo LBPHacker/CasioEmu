@@ -114,6 +114,11 @@ int main(int argc, char *argv[])
 				}
 				break;
 			}
+
+			{
+				std::lock_guard<std::mutex> access_lock(emulator.access_mx);
+				emulator.Frame();
+			}
 		}
 	}
 

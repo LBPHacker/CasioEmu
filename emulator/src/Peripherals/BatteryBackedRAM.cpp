@@ -36,5 +36,9 @@ namespace casioemu
 	void BatteryBackedRAM::Tick()
 	{
 	}
+
+	void BatteryBackedRAM::Frame()
+	{
+	}
 }
 

@@ -17,7 +17,8 @@ namespace casioemu
 	class Emulator
 	{
 		SDL_Window *window;
-		SDL_Surface *window_surface, *interface_image_surface;
+	    SDL_Renderer *renderer;
+	    SDL_Texture *interface_image_texture;
 		SDL_TimerID timer_id;
 		Uint32 timer_interval;
 		bool running, paused;
@@ -61,7 +62,6 @@ namespace casioemu
 		 * A bunch of internally used methods for encapsulation purposes.
 		 */
 		void LoadModelDefition();
-		void LoadInterfaceImage();
 		void TimerCallback();
 		void SetupLuaAPI();
 		void SetupInternals();
@@ -83,6 +83,7 @@ namespace casioemu
 		bool Running();
 		void Shutdown();
 		void Tick();
+		void Frame();
 		void ExecuteCommand(std::string command);
 		bool GetPaused();
 		void SetPaused(bool paused);

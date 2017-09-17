@@ -63,6 +63,7 @@ namespace casioemu
 		void RaiseMaskable(size_t index);
 
 		void Tick();
+		void Frame();
 
 		friend class CPU;
 	};

@@ -15,6 +15,7 @@ namespace casioemu
 		virtual void Initialise() = 0;
 		virtual void Uninitialise() = 0;
 		virtual void Tick() = 0;
+		virtual void Frame() = 0;
 		virtual ~Peripheral();
 	};
 }

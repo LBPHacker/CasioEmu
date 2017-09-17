@@ -33,14 +33,15 @@ namespace casioemu
 		);
 		if (!window)
 			PANIC("SDL_CreateWindow failed: %s\n", SDL_GetError());
+		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+		if (!renderer)
+			PANIC("SDL_CreateRenderer failed: %s\n", SDL_GetError());
 
-		window_surface = SDL_GetWindowSurface(window);
-
-		LoadInterfaceImage();
-
-		SDL_FillRect(window_surface, nullptr, SDL_MapRGB(window_surface->format, 255, 255, 255));
-		SDL_BlitSurface(interface_image_surface, nullptr, window_surface, nullptr);
-		SDL_UpdateWindowSurface(window);
+		SDL_Surface *loaded_surface = IMG_Load(GetModelFilePath(GetModelInfo("interface_image_path")).c_str());
+		if (!loaded_surface)
+			PANIC("IMG_Load failed: %s\n", IMG_GetError());
+		interface_image_texture = SDL_CreateTextureFromSurface(renderer, loaded_surface);
+		SDL_FreeSurface(loaded_surface);
 
 		cycles.Reset();
 
@@ -63,7 +64,8 @@ namespace casioemu
 		std::lock_guard<std::mutex> access_lock(access_mx);
 		SDL_RemoveTimer(timer_id);
 
-	    SDL_FreeSurface(interface_image_surface);
+		SDL_DestroyTexture(interface_image_texture);
+		SDL_DestroyRenderer(renderer);
 		SDL_DestroyWindow(window);
 
 		luaL_unref(lua_state, LUA_REGISTRYINDEX, lua_model_ref);
@@ -197,19 +199,6 @@ namespace casioemu
 		return result;
 	}
 
-	void Emulator::LoadInterfaceImage()
-	{
-	    SDL_Surface *loaded_surface = IMG_Load(GetModelFilePath(GetModelInfo("interface_image_path")).c_str());
-	    if (!loaded_surface)
-	    	PANIC("IMG_Load failed: %s\n", IMG_GetError());
-
-	    interface_image_surface = SDL_ConvertSurface(loaded_surface, window_surface->format, 0);
-	    if (!interface_image_surface)
-	    	PANIC("SDL_ConvertSurface failed: %s\n", SDL_GetError());
-
-	    SDL_FreeSurface(loaded_surface);
-	}
-
 	std::string Emulator::GetModelFilePath(std::string relative_path)
 	{
 		return model_path + "/" + relative_path;
@@ -223,6 +212,15 @@ namespace casioemu
 		for (Uint64 ix = 0; ix != cycles_to_emulate; ++ix)
 			if (!paused)
 				Tick();
+	}
+
+	void Emulator::Frame()
+	{
+		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+		SDL_RenderClear(renderer);
+		SDL_RenderCopy(renderer, interface_image_texture, NULL, NULL);
+		chipset.Frame();
+		SDL_RenderPresent(renderer);
 	}
 
 	void Emulator::Tick()

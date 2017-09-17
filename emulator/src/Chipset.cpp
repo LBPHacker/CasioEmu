@@ -179,6 +179,12 @@ namespace casioemu
 		pending_interrupt_count--;
 	}
 
+	void Chipset::Frame()
+	{
+		for (auto peripheral : peripherals)
+			peripheral->Frame();
+	}
+
 	void Chipset::Tick()
 	{
 		// * TODO: decrement delay counter, return if it's not 0
