@@ -1,40 +1,39 @@
-#include "BatteryBackedRAM.hpp"
+#include "Screen.hpp"
 
+#include "../Logger.hpp"
 #include "../MMU.hpp"
 #include "../Emulator.hpp"
 #include "../Chipset.hpp"
-#include "../Logger.hpp"
 
 namespace casioemu
 {
-	void BatteryBackedRAM::Initialise()
+	void Screen::Initialise()
 	{
-		ram_buffer = new uint8_t[0x0E00];
+		ram_buffer = new uint8_t[0x0200];
 
 		region = {
-			0x8000, // * base
-			0x0E00, // * size
-			"BatteryBackedRAM", // * description
+			0xF800, // * base
+			0x0200, // * size
+			"Screen", // * description
 			ram_buffer, // * userdata
 			[](MMURegion *region, size_t offset) {
-				return ((uint8_t *)region->userdata)[offset - 0x8000];
+				return ((uint8_t *)region->userdata)[offset - 0xF800];
 			}, // * read function
 			[](MMURegion *region, size_t offset, uint8_t data) {
-				((uint8_t *)region->userdata)[offset - 0x8000] = data;
+				((uint8_t *)region->userdata)[offset - 0xF800] = data;
 			} // * write function
 		};
 		emulator.chipset.mmu.RegisterRegion(&region);
 	}
 
-	void BatteryBackedRAM::Uninitialise()
+	void Screen::Uninitialise()
 	{
 		emulator.chipset.mmu.UnregisterRegion(&region);
 
 		delete[] ram_buffer;
 	}
 
-	void BatteryBackedRAM::Tick()
+	void Screen::Tick()
 	{
 	}
 }
-
