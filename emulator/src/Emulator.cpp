@@ -2,6 +2,7 @@
 
 #include "Chipset.hpp"
 #include "Logger.hpp"
+#include "EventCode.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -21,14 +22,15 @@ namespace casioemu
 
 		SetupLuaAPI();
 		LoadModelDefition();
-		SetupInternals();
+
+		interface_background = GetModelInfo("rsd_interface");
 
 		window = SDL_CreateWindow(
 			std::string(GetModelInfo("model_name")).c_str(),
 			SDL_WINDOWPOS_UNDEFINED,
 			SDL_WINDOWPOS_UNDEFINED,
-			int(GetModelInfo("interface_width")),
-			int(GetModelInfo("interface_height")),
+			interface_background.src.w,
+			interface_background.src.h,
 			SDL_WINDOW_SHOWN
 		);
 		if (!window)
@@ -40,9 +42,10 @@ namespace casioemu
 		SDL_Surface *loaded_surface = IMG_Load(GetModelFilePath(GetModelInfo("interface_image_path")).c_str());
 		if (!loaded_surface)
 			PANIC("IMG_Load failed: %s\n", IMG_GetError());
-		interface_image_texture = SDL_CreateTextureFromSurface(renderer, loaded_surface);
+		interface_texture = SDL_CreateTextureFromSurface(renderer, loaded_surface);
 		SDL_FreeSurface(loaded_surface);
 
+		SetupInternals();
 		cycles.Reset();
 
 		timer_id = SDL_AddTimer(timer_interval, [](Uint32 delay, void *param) {
@@ -64,13 +67,18 @@ namespace casioemu
 		std::lock_guard<std::mutex> access_lock(access_mx);
 		SDL_RemoveTimer(timer_id);
 
-		SDL_DestroyTexture(interface_image_texture);
+		SDL_DestroyTexture(interface_texture);
 		SDL_DestroyRenderer(renderer);
 		SDL_DestroyWindow(window);
 
 		luaL_unref(lua_state, LUA_REGISTRYINDEX, lua_model_ref);
 		lua_close(lua_state);
 		delete &chipset;
+	}
+
+	void Emulator::UIEvent(SDL_Event &event)
+	{
+		chipset.UIEvent(event);
 	}
 
 	void Emulator::RunStartupScript()
@@ -167,38 +175,6 @@ namespace casioemu
 			PANIC("LoadModelDefition failed: model failed to call emu.model\n");
 	}
 
-	Emulator::ModelInfo Emulator::GetModelInfo(std::string key)
-	{
-		return ModelInfo(*this, key);
-	}
-
-	Emulator::ModelInfo::ModelInfo(Emulator &_emulator, std::string _key) : emulator(_emulator)
-	{
-		key = _key;
-	}
-
-	Emulator::ModelInfo::operator std::string()
-	{
-		lua_rawgeti(emulator.lua_state, LUA_REGISTRYINDEX, emulator.lua_model_ref);
-		lua_getfield(emulator.lua_state, -1, key.c_str());
-		const char *value = lua_tostring(emulator.lua_state, -1);
-		if (!value)
-			PANIC("ModelInfo::operator std::string failed: key '%s' is not defined\n", key.c_str());
-		lua_pop(emulator.lua_state, 2);
-		return std::string(value);
-	}
-
-	Emulator::ModelInfo::operator int()
-	{
-		int result;
-		std::stringstream ss;
-		ss << std::string(*this);
-		ss >> result;
-		if (ss.fail())
-			PANIC("ModelInfo::operator int failed: key '%s' is not convertible to int\n", key.c_str());
-		return result;
-	}
-
 	std::string Emulator::GetModelFilePath(std::string relative_path)
 	{
 		return model_path + "/" + relative_path;
@@ -212,13 +188,21 @@ namespace casioemu
 		for (Uint64 ix = 0; ix != cycles_to_emulate; ++ix)
 			if (!paused)
 				Tick();
+
+		SDL_Event event;
+		SDL_zero(event);
+		event.type = SDL_USEREVENT;
+		event.user.code = CE_FRAME_REQUEST;
+		SDL_PushEvent(&event);
 	}
 
 	void Emulator::Frame()
 	{
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 		SDL_RenderClear(renderer);
-		SDL_RenderCopy(renderer, interface_image_texture, NULL, NULL);
+		SDL_SetTextureColorMod(interface_texture, 255, 255, 255);
+		SDL_SetTextureAlphaMod(interface_texture, 255);
+		SDL_RenderCopy(renderer, interface_texture, &interface_background.src, &interface_background.dest);
 		chipset.Frame();
 		SDL_RenderPresent(renderer);
 	}
@@ -227,7 +211,7 @@ namespace casioemu
 	{
 		if (lua_pre_tick_ref != LUA_REFNIL)
 		{
-			lua_rawgeti(lua_state, LUA_REGISTRYINDEX, lua_pre_tick_ref);
+			lua_geti(lua_state, LUA_REGISTRYINDEX, lua_pre_tick_ref);
 			if (lua_pcall(lua_state, 0, 0, 0) != LUA_OK)
 			{
 				logger::Info("pre-tick hook failed: %s\n", lua_tostring(lua_state, -1));
@@ -242,7 +226,7 @@ namespace casioemu
 
 		if (lua_post_tick_ref != LUA_REFNIL)
 		{
-			lua_rawgeti(lua_state, LUA_REGISTRYINDEX, lua_post_tick_ref);
+			lua_geti(lua_state, LUA_REGISTRYINDEX, lua_post_tick_ref);
 			if (lua_pcall(lua_state, 0, 0, 0) != LUA_OK)
 			{
 				logger::Info("post-tick hook failed: %s\n", lua_tostring(lua_state, -1));
@@ -320,5 +304,15 @@ namespace casioemu
 		cycles_emulated = cycles_to_have_been_emulated_by_now;
 		return diff;
 	}
+
+    SDL_Renderer *Emulator::GetRenderer()
+    {
+    	return renderer;
+    }
+
+    SDL_Texture *Emulator::GetInterfaceTexture()
+    {
+    	return interface_texture;
+    }
 }
 

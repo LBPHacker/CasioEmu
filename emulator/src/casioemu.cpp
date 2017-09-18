@@ -11,6 +11,9 @@
 
 #include "Emulator.hpp"
 #include "Logger.hpp"
+#include "EventCode.hpp"
+
+using namespace casioemu;
 
 int main(int argc, char *argv[])
 {
@@ -33,7 +36,7 @@ int main(int argc, char *argv[])
 		if (argv_map.find(key) == argv_map.end())
 			argv_map[key] = value;
 		else
-			casioemu::logger::Info("[argv] #%i: key '%s' already set\n", ix, key.c_str());
+			logger::Info("[argv] #%i: key '%s' already set\n", ix, key.c_str());
 	}
 
 	if (argv_map.find("model") == argv_map.end())
@@ -51,13 +54,12 @@ int main(int argc, char *argv[])
 		PANIC("IMG_Init failed: %s\n", IMG_GetError());
 
 	{
-		casioemu::Emulator emulator(argv_map, 20, 32768);
+		Emulator emulator(argv_map, 20, 32768);
 
 		std::mutex input_mx;
 		std::condition_variable input_cv;
 		bool input_processed;
 		std::string console_input_str;
-		Uint32 console_input_event = SDL_RegisterEvents(1);
 		std::thread console_input_thread([&] {
 			while (1)
 			{
@@ -65,14 +67,15 @@ int main(int argc, char *argv[])
 				std::getline(std::cin, console_input_str);
 				if (std::cin.fail())
 				{
-					casioemu::logger::Info("Console thread shutting down\n");
+					logger::Info("Console thread shutting down\n");
 					break;
 				}
 
 				input_processed = false;
 				SDL_Event event;
 				SDL_zero(event);
-				event.type = console_input_event;
+				event.type = SDL_USEREVENT;
+				event.user.code = CE_EVENT_INPUT;
 				SDL_PushEvent(&event);
 
 				std::unique_lock<std::mutex> input_lock(input_mx);
@@ -92,8 +95,9 @@ int main(int argc, char *argv[])
 			switch (event.type)
 			{
 			case SDL_USEREVENT:
-				if (event.type == console_input_event)
+				switch (event.user.code)
 				{
+				case CE_EVENT_INPUT:
 					{
 						std::lock_guard<std::mutex> input_lock(input_mx);
 						std::lock_guard<std::mutex> access_lock(emulator.access_mx);
@@ -101,6 +105,12 @@ int main(int argc, char *argv[])
 						input_processed = true;
 					}
 					input_cv.notify_one();
+					break;
+
+				case CE_FRAME_REQUEST:
+					std::lock_guard<std::mutex> access_lock(emulator.access_mx);
+					emulator.Frame();
+					break;
 				}
 				break;
 
@@ -113,11 +123,14 @@ int main(int argc, char *argv[])
 					break;
 				}
 				break;
-			}
 
-			{
-				std::lock_guard<std::mutex> access_lock(emulator.access_mx);
-				emulator.Frame();
+			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP:
+				{
+					std::lock_guard<std::mutex> access_lock(emulator.access_mx);
+					emulator.UIEvent(event);
+				}
+				break;
 			}
 		}
 	}

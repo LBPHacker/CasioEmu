@@ -8,6 +8,9 @@
 #include <lua5.3/lua.hpp>
 #include <mutex>
 
+#include "ModelInfo.hpp"
+#include "SpriteInfo.hpp"
+
 namespace casioemu
 {
 	class Chipset;
@@ -17,8 +20,8 @@ namespace casioemu
 	class Emulator
 	{
 		SDL_Window *window;
-	    SDL_Renderer *renderer;
-	    SDL_Texture *interface_image_texture;
+		SDL_Renderer *renderer;
+		SDL_Texture *interface_texture;
 		SDL_TimerID timer_id;
 		Uint32 timer_interval;
 		bool running, paused;
@@ -26,8 +29,7 @@ namespace casioemu
 		std::string model_path;
 		std::map<std::string, std::string> &argv_map;
 
-		lua_State *lua_state;
-		int lua_model_ref, lua_pre_tick_ref, lua_post_tick_ref;
+		SpriteInfo interface_background;
 
 		/**
 		 * The cycle manager structure. This structure is reset every time the
@@ -45,20 +47,6 @@ namespace casioemu
 		} cycles;
 
 		/**
-		 * A smart-cast structure used to return data loaded from the model definition.
-		 * `GetModelInfo` returns one of these.
-		 */
-		struct ModelInfo
-		{
-			ModelInfo(Emulator &emulator, std::string key);
-			Emulator &emulator;
-			std::string key;
-
-			operator std::string();
-			operator int();
-		};
-
-		/**
 		 * A bunch of internally used methods for encapsulation purposes.
 		 */
 		void LoadModelDefition();
@@ -72,6 +60,8 @@ namespace casioemu
 		~Emulator();
 
 		std::mutex access_mx;
+		lua_State *lua_state;
+		int lua_model_ref, lua_pre_tick_ref, lua_post_tick_ref;
 
 		/**
 		 * A reference to the emulator chipset. This object holds all CPU, MMU, memory and
@@ -87,9 +77,13 @@ namespace casioemu
 		void ExecuteCommand(std::string command);
 		bool GetPaused();
 		void SetPaused(bool paused);
+		void UIEvent(SDL_Event &event);
+		SDL_Renderer *GetRenderer();
+		SDL_Texture *GetInterfaceTexture();
 		ModelInfo GetModelInfo(std::string key);
 		std::string GetModelFilePath(std::string relative_path);
 
+		friend class ModelInfo;
 		friend class CPU;
 		friend class MMU;
 	};

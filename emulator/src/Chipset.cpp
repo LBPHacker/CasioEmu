@@ -7,6 +7,8 @@
 
 #include "Peripherals/ROMWindow.hpp"
 #include "Peripherals/BatteryBackedRAM.hpp"
+#include "Peripherals/Screen.hpp"
+#include "Peripherals/Keyboard.hpp"
 
 #include <fstream>
 
@@ -28,6 +30,8 @@ namespace casioemu
 		// * TODO: Add more peripherals here.
 		peripherals.push_front(new ROMWindow(emulator));
 		peripherals.push_front(new BatteryBackedRAM(emulator));
+		peripherals.push_front(new Screen(emulator));
+		peripherals.push_front(new Keyboard(emulator));
 	}
 
 	Chipset::~Chipset()
@@ -196,6 +200,12 @@ namespace casioemu
 			AcceptInterrupt();
 
 		cpu.Next();
+	}
+
+	void Chipset::UIEvent(SDL_Event &event)
+	{
+		for (auto peripheral : peripherals)
+			peripheral->UIEvent(event);
 	}
 }
 

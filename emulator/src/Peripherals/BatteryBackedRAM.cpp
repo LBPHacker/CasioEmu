@@ -40,5 +40,9 @@ namespace casioemu
 	void BatteryBackedRAM::Frame()
 	{
 	}
+
+	void BatteryBackedRAM::UIEvent(SDL_Event &event)
+	{
+	}
 }
 

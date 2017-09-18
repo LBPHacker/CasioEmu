@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <forward_list>
+#include <SDL2/SDL.h>
 
 namespace casioemu
 {
@@ -64,6 +65,7 @@ namespace casioemu
 
 		void Tick();
 		void Frame();
+		void UIEvent(SDL_Event &event);
 
 		friend class CPU;
 	};
