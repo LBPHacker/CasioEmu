@@ -28,19 +28,19 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.9999999"
-     inkscape:cx="141.96675"
-     inkscape:cy="405.71199"
+     inkscape:zoom="22.627416"
+     inkscape:cx="410.59164"
+     inkscape:cy="556.21666"
      inkscape:document-units="px"
-     inkscape:current-layer="layer6"
+     inkscape:current-layer="layer7"
      showgrid="true"
      units="px"
      inkscape:snap-global="false"
-     inkscape:window-width="1085"
-     inkscape:window-height="959"
+     inkscape:window-width="1280"
+     inkscape:window-height="974"
      inkscape:window-x="1280"
      inkscape:window-y="0"
-     inkscape:window-maximized="0">
+     inkscape:window-maximized="1">
     <inkscape:grid
        type="xygrid"
        id="grid4136"
@@ -830,8 +830,8 @@
     <rect
        y="-18"
        x="410"
-       height="3"
-       width="3"
+       height="2.8499999"
+       width="2.8499999"
        id="rect7005-5"
        style="display:inline;opacity:1;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:35.95999908;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
   </g>

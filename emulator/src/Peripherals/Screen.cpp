@@ -35,7 +35,8 @@ namespace casioemu
 
 	    renderer = emulator.GetRenderer();
 	    interface_texture = emulator.GetInterfaceTexture();
-		ink_color = emulator.GetModelInfo("ink_color");
+		ink_color_on = emulator.GetModelInfo("ink_color_on");
+		ink_color_off = emulator.GetModelInfo("ink_color_off");
 		for (int ix = 0; ix != SPR_MAX; ++ix)
 			sprite_info[ix] = emulator.GetModelInfo(sprite_bitmap[ix].name);
 
@@ -69,12 +70,20 @@ namespace casioemu
 
 	void Screen::Frame()
 	{
-		SDL_SetTextureColorMod(interface_texture, ink_color.r, ink_color.g, ink_color.b);
-		SDL_SetTextureAlphaMod(interface_texture, ink_color.a);
-
-		for (int ix = SPR_PIXEL; ix != SPR_MAX; ++ix)
+		for (int ix = SPR_PIXEL + 1; ix != SPR_MAX; ++ix)
+		{
 			if (screen_buffer[sprite_bitmap[ix].offset] & sprite_bitmap[ix].mask)
-				SDL_RenderCopy(renderer, interface_texture, &sprite_info[ix].src, &sprite_info[ix].dest);
+			{
+				SDL_SetTextureColorMod(interface_texture, ink_color_on.r, ink_color_on.g, ink_color_on.b);
+				SDL_SetTextureAlphaMod(interface_texture, ink_color_on.a);
+			}
+			else
+			{
+				SDL_SetTextureColorMod(interface_texture, ink_color_off.r, ink_color_off.g, ink_color_off.b);
+				SDL_SetTextureAlphaMod(interface_texture, ink_color_off.a);
+			}
+			SDL_RenderCopy(renderer, interface_texture, &sprite_info[ix].src, &sprite_info[ix].dest);
+		}
 
 		SDL_Rect dest = sprite_info[SPR_PIXEL].dest;
 		for (int iy = 0; iy != 31; ++iy)
@@ -82,9 +91,22 @@ namespace casioemu
 			dest.x = sprite_info[SPR_PIXEL].dest.x;
 			dest.y = sprite_info[SPR_PIXEL].dest.y + iy * sprite_info[SPR_PIXEL].src.h;
 			for (int ix = 0; ix != 12; ++ix)
+			{
 				for (uint8_t mask = 0x80; mask; mask >>= 1, dest.x += sprite_info[SPR_PIXEL].src.w)
+				{
 					if (screen_buffer[(iy << 4) + 0x10 + ix] & mask)
-						SDL_RenderCopy(renderer, interface_texture, &sprite_info[SPR_PIXEL].src, &dest);
+					{
+						SDL_SetTextureColorMod(interface_texture, ink_color_on.r, ink_color_on.g, ink_color_on.b);
+						SDL_SetTextureAlphaMod(interface_texture, ink_color_on.a);
+					}
+					else
+					{
+						SDL_SetTextureColorMod(interface_texture, ink_color_off.r, ink_color_off.g, ink_color_off.b);
+						SDL_SetTextureAlphaMod(interface_texture, ink_color_off.a);
+					}
+					SDL_RenderCopy(renderer, interface_texture, &sprite_info[SPR_PIXEL].src, &dest);
+				}
+			}
 		}
 	}
 
