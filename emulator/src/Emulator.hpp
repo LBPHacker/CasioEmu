@@ -8,8 +8,8 @@
 #include <lua5.3/lua.hpp>
 #include <mutex>
 
-#include "ModelInfo.hpp"
-#include "SpriteInfo.hpp"
+#include "Data/ModelInfo.hpp"
+#include "Data/SpriteInfo.hpp"
 
 namespace casioemu
 {

@@ -1,8 +1,8 @@
 #include "MMU.hpp"
 
-#include "Emulator.hpp"
+#include "../Emulator.hpp"
 #include "Chipset.hpp"
-#include "Logger.hpp"
+#include "../Logger.hpp"
 
 namespace casioemu
 {

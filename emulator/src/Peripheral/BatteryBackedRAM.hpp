@@ -1,14 +1,15 @@
 #pragma once
 #include "../Config.hpp"
 
-#include "../Peripheral.hpp"
-#include "../MMURegion.hpp"
+#include "Peripheral.hpp"
+#include "../Chipset/MMURegion.hpp"
 
 namespace casioemu
 {
-	class ROMWindow : public Peripheral
+	class BatteryBackedRAM : public Peripheral
 	{
-		MMURegion region_0, region_1, region_8;
+		MMURegion region;
+		uint8_t *ram_buffer;
 
 	public:
 		using Peripheral::Peripheral;

@@ -1,14 +1,14 @@
 #include "Chipset.hpp"
 
-#include "Emulator.hpp"
-#include "Logger.hpp"
+#include "../Emulator.hpp"
+#include "../Logger.hpp"
 #include "CPU.hpp"
 #include "MMU.hpp"
 
-#include "Peripherals/ROMWindow.hpp"
-#include "Peripherals/BatteryBackedRAM.hpp"
-#include "Peripherals/Screen.hpp"
-#include "Peripherals/Keyboard.hpp"
+#include "../Peripheral/ROMWindow.hpp"
+#include "../Peripheral/BatteryBackedRAM.hpp"
+#include "../Peripheral/Screen.hpp"
+#include "../Peripheral/Keyboard.hpp"
 
 #include <fstream>
 

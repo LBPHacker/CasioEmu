@@ -11,7 +11,7 @@
 
 #include "Emulator.hpp"
 #include "Logger.hpp"
-#include "EventCode.hpp"
+#include "Data/EventCode.hpp"
 
 using namespace casioemu;
 

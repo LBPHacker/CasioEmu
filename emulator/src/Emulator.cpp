@@ -1,8 +1,8 @@
 #include "Emulator.hpp"
 
-#include "Chipset.hpp"
+#include "Chipset/Chipset.hpp"
 #include "Logger.hpp"
-#include "EventCode.hpp"
+#include "Data/EventCode.hpp"
 
 #include <iostream>
 #include <fstream>

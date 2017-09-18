@@ -1,9 +1,9 @@
 #include "CPU.hpp"
 
-#include "Emulator.hpp"
+#include "../Emulator.hpp"
 #include "Chipset.hpp"
 #include "MMU.hpp"
-#include "Logger.hpp"
+#include "../Logger.hpp"
 
 #include <sstream>
 

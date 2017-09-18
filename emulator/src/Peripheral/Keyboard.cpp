@@ -1,9 +1,9 @@
 #include "Keyboard.hpp"
 
 #include "../Logger.hpp"
-#include "../MMU.hpp"
+#include "../Chipset/MMU.hpp"
 #include "../Emulator.hpp"
-#include "../Chipset.hpp"
+#include "../Chipset/Chipset.hpp"
 
 #include <lua5.3/lua.hpp>
 #include <set>

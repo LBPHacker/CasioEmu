@@ -1,8 +1,8 @@
 #pragma once
 #include "../Config.hpp"
 
-#include "../Peripheral.hpp"
-#include "../MMURegion.hpp"
+#include "Peripheral.hpp"
+#include "../Chipset/MMURegion.hpp"
 
 #include <array>
 

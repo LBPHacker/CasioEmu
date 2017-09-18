@@ -1,6 +1,6 @@
 #include "ModelInfo.hpp"
 
-#include "Emulator.hpp"
+#include "../Emulator.hpp"
 #include "SpriteInfo.hpp"
 
 namespace casioemu
