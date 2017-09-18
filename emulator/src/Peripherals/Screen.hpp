@@ -3,7 +3,6 @@
 
 #include "../Peripheral.hpp"
 #include "../MMURegion.hpp"
-#include "../RGBAInfo.hpp"
 #include "../SpriteInfo.hpp"
 
 namespace casioemu
@@ -13,9 +12,10 @@ namespace casioemu
 		MMURegion region;
 		uint8_t *screen_buffer;
 
-		RGBAInfo ink_color_on, ink_color_off;
 	    SDL_Renderer *renderer;
 	    SDL_Texture *interface_texture;
+
+	    uint8_t ink_alpha_on, ink_alpha_off;
 
 		enum Sprite
 		{

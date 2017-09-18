@@ -2,7 +2,6 @@
 
 #include "Emulator.hpp"
 #include "SpriteInfo.hpp"
-#include "RGBAInfo.hpp"
 
 namespace casioemu
 {
@@ -58,26 +57,6 @@ namespace casioemu
 
 		lua_pop(emulator.lua_state, 7);
 		return sprite_info;
-	}
-
-	ModelInfo::operator RGBAInfo()
-	{
-		lua_geti(emulator.lua_state, LUA_REGISTRYINDEX, emulator.lua_model_ref);
-		if (lua_getfield(emulator.lua_state, -1, key.c_str()) != LUA_TTABLE)
-			PANIC("key '%s' is not a table\n", key.c_str());
-
-		for (int ix = 0; ix != 4; ++ix)
-			if (lua_geti(emulator.lua_state, -1 - ix, ix + 1) != LUA_TNUMBER)
-				PANIC("key '%s'[%i] is not a number\n", key.c_str(), ix + 1);
-
-		RGBAInfo rgba_info;
-		rgba_info.r = lua_tointeger(emulator.lua_state, -4);
-		rgba_info.g = lua_tointeger(emulator.lua_state, -3);
-		rgba_info.b = lua_tointeger(emulator.lua_state, -2);
-		rgba_info.a = lua_tointeger(emulator.lua_state, -1);
-
-		lua_pop(emulator.lua_state, 5);
-		return rgba_info;
 	}
 }
 

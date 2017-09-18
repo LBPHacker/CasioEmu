@@ -4,20 +4,30 @@
 #include "../Peripheral.hpp"
 #include "../MMURegion.hpp"
 
+#include <array>
+
 namespace casioemu
 {
 	class Keyboard : public Peripheral
 	{
 		MMURegion region_ko, region_ki;
-		uint8_t keyboard_out, keyboard_in;
+		uint8_t keyboard_out[2], keyboard_in, keyboard_ghost[8];
 
-		struct ButtonInfo
+	    SDL_Renderer *renderer;
+
+		struct Button
 		{
-			int x, y, w, h;
-			uint8_t mask, response;
+			enum ButtonType
+			{
+				BT_NONE,
+				BT_BUTTON,
+				BT_POWER
+			} type;
+			SDL_Rect rect;
+			uint8_t ko_bit, ki_bit;
 			bool pressed, stuck;
-		} *buttons;
-		size_t buttons_size;
+		};
+		std::array<Button, 64> buttons;
 
 	public:
 		using Peripheral::Peripheral;
@@ -29,7 +39,8 @@ namespace casioemu
 		void UIEvent(SDL_Event &event);
 		void PressAt(int x, int y, bool stick);
 		void ReleaseAll();
-		void Recalculate();
+		void RecalculateKI();
+		void RecalculateGhost();
 	};
 }
 

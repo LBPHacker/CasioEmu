@@ -6,7 +6,6 @@
 namespace casioemu
 {
 	class Emulator;
-	class RGBAInfo;
 	class SpriteInfo;
 
 	struct ModelInfo
@@ -18,7 +17,6 @@ namespace casioemu
 		operator std::string();
 		operator int();
 		operator SpriteInfo();
-		operator RGBAInfo();
 	};
 }
 
