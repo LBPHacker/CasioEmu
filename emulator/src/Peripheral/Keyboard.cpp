@@ -6,7 +6,6 @@
 #include "../Chipset/Chipset.hpp"
 
 #include <lua5.3/lua.hpp>
-#include <set>
 
 namespace casioemu
 {
@@ -182,15 +181,14 @@ namespace casioemu
 	{
 		struct KOColumn
 		{
-			std::set<size_t> connections;
+			uint8_t connections;
 			bool seen;
-		};
-		std::array<KOColumn, 8> columns;
+		} columns[8];
 
 		for (size_t cx = 0; cx != 8; ++cx)
 		{
-			KOColumn &column = columns[cx];
-			column.seen = false;
+			columns[cx].seen = false;
+			columns[cx].connections = 0;
 			for (size_t rx = 0; rx != 8; ++rx)
 			{
 				Button &button = buttons[cx * 8 + rx];
@@ -200,7 +198,7 @@ namespace casioemu
 					{
 						Button &sibling = buttons[ax * 8 + rx];
 						if (sibling.type == Button::BT_BUTTON && sibling.pressed)
-							column.connections.insert(ax);
+							columns[cx].connections |= 1 << ax;
 					}
 				}
 			}
@@ -210,35 +208,31 @@ namespace casioemu
 		{
 			if (!columns[cx].seen)
 			{
-				std::set<size_t> ghost_group;
 				std::vector<size_t> to_visit = {cx};
+				uint8_t ghost_group = 1 << cx;
 				columns[cx].seen = true;
-				ghost_group.insert(cx);
 
 				while (!to_visit.empty())
 				{
 					std::vector<size_t> new_to_visit;
 					for (size_t visited : to_visit)
 					{
-						for (size_t connection : columns[visited].connections)
+						for (size_t sx = 0; sx != 8; ++sx)
 						{
-							if (!columns[connection].seen)
+							if (columns[visited].connections & (1 << sx) && !columns[sx].seen)
 							{
-								new_to_visit.push_back(connection);
-								ghost_group.insert(connection);
-								columns[connection].seen = true;
+								new_to_visit.push_back(sx);
+								ghost_group |= 1 << sx;
+								columns[sx].seen = true;
 							}
 						}
 					}
 					to_visit = new_to_visit;
 				}
 
-				uint8_t ghost_mask = 0;
-				for (size_t gx : ghost_group)
-					ghost_mask |= 1 << gx;
-
-				for (size_t gx : ghost_group)
-					keyboard_ghost[gx] = ghost_mask;
+				for (size_t gx = 0; gx != 8; ++gx)
+					if ((1 << gx) & ghost_group)
+						keyboard_ghost[gx] = ghost_group;
 			}
 		}
 	}
