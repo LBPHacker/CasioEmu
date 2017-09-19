@@ -69,38 +69,21 @@ namespace casioemu
 			lua_pop(emulator.lua_state, 2);
 		}
 
-		region_ki = {
-			0xF040, // * base
-			0x0001, // * size
-			"Keyboard/KI", // * description
-			this, // * userdata
-			[](MMURegion *region, size_t offset) {
-				return ((Keyboard *)region->userdata)->keyboard_in;
-			}, // * read function
-			[](MMURegion *region, size_t offset, uint8_t data) {
-			} // * write function
-		};
-		emulator.chipset.mmu.RegisterRegion(&region_ki);
+		region_ki.Setup(0xF040, 0x0001, "Keyboard/KI", this, [](MMURegion *region, size_t offset) {
+			return ((Keyboard *)region->userdata)->keyboard_in;
+		}, MMURegion::DefaultWrite, emulator);
 
-		region_ko = {
-			0xF046, // * base
-			0x0002, // * size
-			"Keyboard/KO", // * description
-			this, // * userdata
-			[](MMURegion *region, size_t offset) {
-				offset -= 0xF046;
-				Keyboard *keyboard = ((Keyboard *)region->userdata);
-				return keyboard->keyboard_out[offset];
-			}, // * read function
-			[](MMURegion *region, size_t offset, uint8_t data) {
-				offset -= 0xF046;
-				Keyboard *keyboard = ((Keyboard *)region->userdata);
-				keyboard->keyboard_out[offset] = data;
-				if (offset == 0)
-					keyboard->RecalculateKI();
-			} // * write function
-		};
-		emulator.chipset.mmu.RegisterRegion(&region_ko);
+		region_ko.Setup(0xF046, 0x0002, "Keyboard/KO", this, [](MMURegion *region, size_t offset) {
+			offset -= 0xF046;
+			Keyboard *keyboard = ((Keyboard *)region->userdata);
+			return keyboard->keyboard_out[offset];
+		}, [](MMURegion *region, size_t offset, uint8_t data) {
+			offset -= 0xF046;
+			Keyboard *keyboard = ((Keyboard *)region->userdata);
+			keyboard->keyboard_out[offset] = data;
+			if (offset == 0)
+				keyboard->RecalculateKI();
+		}, emulator);
 
 		RecalculateGhost();
 		keyboard_out[0] = 0;
@@ -110,8 +93,6 @@ namespace casioemu
 
 	void Keyboard::Uninitialise()
 	{
-		emulator.chipset.mmu.UnregisterRegion(&region_ki);
-		emulator.chipset.mmu.UnregisterRegion(&region_ko);
 	}
 
 	void Keyboard::Tick()

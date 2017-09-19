@@ -40,25 +40,17 @@ namespace casioemu
 
 		screen_buffer = new uint8_t[0x0200];
 
-		region = {
-			0xF800, // * base
-			0x0200, // * size
-			"Screen", // * description
-			screen_buffer, // * userdata
-			[](MMURegion *region, size_t offset) {
-				offset -= 0xF800;
-				if ((offset & 0x000F) >= 0x000C)
-					return (uint8_t)0;
-				return ((uint8_t *)region->userdata)[offset];
-			}, // * read function
-			[](MMURegion *region, size_t offset, uint8_t data) {
-				offset -= 0xF800;
-				if ((offset & 0x000F) >= 0x000C)
-					return;
-				((uint8_t *)region->userdata)[offset] = data;
-			} // * write function
-		};
-		emulator.chipset.mmu.RegisterRegion(&region);
+		region.Setup(0xF800, 0x0200, "Screen", screen_buffer, [](MMURegion *region, size_t offset) {
+			offset -= 0xF800;
+			if ((offset & 0x000F) >= 0x000C)
+				return (uint8_t)0;
+			return ((uint8_t *)region->userdata)[offset];
+		}, [](MMURegion *region, size_t offset, uint8_t data) {
+			offset -= 0xF800;
+			if ((offset & 0x000F) >= 0x000C)
+				return;
+			((uint8_t *)region->userdata)[offset] = data;
+		}, emulator);
 
 		ink_alpha_on = 255;
 		ink_alpha_off = 63;
@@ -66,8 +58,6 @@ namespace casioemu
 
 	void Screen::Uninitialise()
 	{
-		emulator.chipset.mmu.UnregisterRegion(&region);
-
 		delete[] screen_buffer;
 	}
 

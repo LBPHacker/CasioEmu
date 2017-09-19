@@ -27,7 +27,6 @@ namespace casioemu
 		bool running, paused;
 		Uint32 last_frame_tick_count;
 		std::string model_path;
-		std::map<std::string, std::string> &argv_map;
 
 		SpriteInfo interface_background;
 
@@ -62,6 +61,7 @@ namespace casioemu
 		std::mutex access_mx;
 		lua_State *lua_state;
 		int lua_model_ref, lua_pre_tick_ref, lua_post_tick_ref;
+		std::map<std::string, std::string> &argv_map;
 
 		/**
 		 * A reference to the emulator chipset. This object holds all CPU, MMU, memory and
