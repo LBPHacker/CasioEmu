@@ -4,8 +4,6 @@
 #include "Peripheral.hpp"
 #include "../Chipset/MMURegion.hpp"
 
-#include <array>
-
 namespace casioemu
 {
 	class Keyboard : public Peripheral
@@ -26,8 +24,7 @@ namespace casioemu
 			SDL_Rect rect;
 			uint8_t ko_bit, ki_bit;
 			bool pressed, stuck;
-		};
-		std::array<Button, 64> buttons;
+		} buttons[64];
 
 	public:
 		using Peripheral::Peripheral;

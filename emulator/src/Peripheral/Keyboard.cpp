@@ -62,8 +62,8 @@ namespace casioemu
 
 				lua_pop(emulator.lua_state, 6);
 
-				buttons[ix].pressed = false;
-				buttons[ix].stuck = false;
+				button.pressed = false;
+				button.stuck = false;
 			}
 
 			lua_pop(emulator.lua_state, 2);
@@ -208,22 +208,25 @@ namespace casioemu
 		{
 			if (!columns[cx].seen)
 			{
-				std::vector<size_t> to_visit = {cx};
-				uint8_t ghost_group = 1 << cx;
+				uint8_t to_visit = 1 << cx;
+				uint8_t ghost_mask = 1 << cx;
 				columns[cx].seen = true;
 
-				while (!to_visit.empty())
+				while (to_visit)
 				{
-					std::vector<size_t> new_to_visit;
-					for (size_t visited : to_visit)
+					uint8_t new_to_visit = 0;
+					for (size_t vx = 0; vx != 8; ++vx)
 					{
-						for (size_t sx = 0; sx != 8; ++sx)
+						if (to_visit & (1 << vx))
 						{
-							if (columns[visited].connections & (1 << sx) && !columns[sx].seen)
+							for (size_t sx = 0; sx != 8; ++sx)
 							{
-								new_to_visit.push_back(sx);
-								ghost_group |= 1 << sx;
-								columns[sx].seen = true;
+								if (columns[vx].connections & (1 << sx) && !columns[sx].seen)
+								{
+									new_to_visit |= 1 << sx;
+									ghost_mask |= 1 << sx;
+									columns[sx].seen = true;
+								}
 							}
 						}
 					}
@@ -231,8 +234,8 @@ namespace casioemu
 				}
 
 				for (size_t gx = 0; gx != 8; ++gx)
-					if ((1 << gx) & ghost_group)
-						keyboard_ghost[gx] = ghost_group;
+					if (ghost_mask & (1 << gx))
+						keyboard_ghost[gx] = ghost_mask;
 			}
 		}
 	}
