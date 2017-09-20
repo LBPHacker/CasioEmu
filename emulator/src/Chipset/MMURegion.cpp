@@ -19,6 +19,9 @@ namespace casioemu
 
 	void MMURegion::Setup(size_t _base, size_t _size, std::string _description, void *_userdata, ReadFunction _read, WriteFunction _write, Emulator &_emulator)
 	{
+		if (setup_done)
+			PANIC("Setup invoked twice\n");
+
 		emulator = &_emulator;
 		base = _base;
 		size = _size;

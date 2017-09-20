@@ -79,22 +79,25 @@ namespace casioemu
 		if (ink_alpha_off < 0)
 			ink_alpha_off = 0;
 
-		bool enable_status, enable_dotmatrix;
+		bool enable_status, enable_dotmatrix, clear_dots;
 
 		switch (screen_mode)
 		{
 		case 4:
 			enable_dotmatrix = true;
+			clear_dots = true;
 			enable_status = false;
 			break;
 
 		case 5:
 			enable_dotmatrix = true;
+			clear_dots = false;
 			enable_status = true;
 			break;
 
 		case 6:
 			enable_dotmatrix = true;
+			clear_dots = true;
 			enable_status = true;
 			ink_alpha_on = 80;
 			ink_alpha_off = 20;
@@ -129,7 +132,7 @@ namespace casioemu
 				{
 					for (uint8_t mask = 0x80; mask; mask >>= 1, dest.x += sprite_info[SPR_PIXEL].src.w)
 					{
-						if (screen_buffer[(iy << 4) + 0x10 + ix] & mask)
+						if (!clear_dots && screen_buffer[(iy << 4) + 0x10 + ix] & mask)
 							SDL_SetTextureAlphaMod(interface_texture, ink_alpha_on);
 						else
 							SDL_SetTextureAlphaMod(interface_texture, ink_alpha_off);
