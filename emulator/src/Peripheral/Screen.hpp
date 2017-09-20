@@ -9,13 +9,11 @@ namespace casioemu
 {
 	class Screen : public Peripheral
 	{
-		MMURegion region;
-		uint8_t *screen_buffer;
+		MMURegion region_buffer, region_contrast, region_mode, region_range;
+		uint8_t *screen_buffer, screen_contrast, screen_mode, screen_range;
 
 	    SDL_Renderer *renderer;
 	    SDL_Texture *interface_texture;
-
-	    uint8_t ink_alpha_on, ink_alpha_off;
 
 		enum Sprite
 		{

@@ -10,6 +10,7 @@
 #include "../Peripheral/Screen.hpp"
 #include "../Peripheral/Keyboard.hpp"
 #include "../Peripheral/StandbyControl.hpp"
+#include "../Peripheral/Miscellaneous.hpp"
 
 #include <fstream>
 
@@ -34,6 +35,7 @@ namespace casioemu
 		peripherals.push_front(new Screen(emulator));
 		peripherals.push_front(new Keyboard(emulator));
 		peripherals.push_front(new StandbyControl(emulator));
+		peripherals.push_front(new Miscellaneous(emulator));
 	}
 
 	Chipset::~Chipset()

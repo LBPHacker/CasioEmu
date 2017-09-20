@@ -13,7 +13,7 @@ namespace casioemu
 		if (push_size == 1)
 			push_size = 2;
 		reg_sp -= push_size;
-		for (size_t ix = impl_operands[1].register_size - 1; ix != -1; --ix)
+		for (size_t ix = impl_operands[1].register_size - 1; ix != (size_t)-1; --ix)
 			emulator.chipset.mmu.WriteData(reg_sp + ix, impl_operands[1].value >> (8 * ix));
 	}
 

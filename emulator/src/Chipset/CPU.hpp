@@ -76,16 +76,6 @@ namespace casioemu
 		typedef Register<uint8_t> reg8_t;
 		typedef Register<uint16_t> reg16_t;
 
-		/**
-		 * See 1.2.1 in the nX-U8 manual.
-		 */
-		reg8_t reg_r[16], reg_cr[16];
-		reg16_t reg_pc, reg_elr[4], &reg_lr;
-		reg16_t reg_csr, reg_ecsr[4], &reg_lcsr;
-		reg8_t reg_epsw[4], &reg_psw;
-		reg16_t reg_sp, reg_ea;
-		reg8_t reg_dsr;
-
 		uint8_t impl_last_dsr;
 		uint8_t impl_flags_changed, impl_flags_out, impl_flags_in;
 		uint8_t impl_shift_buffer;
@@ -126,6 +116,16 @@ namespace casioemu
 			MM_SMALL,
 			MM_LARGE
 		} memory_model;
+
+		/**
+		 * See 1.2.1 in the nX-U8 manual.
+		 */
+		reg8_t reg_r[16], reg_cr[16];
+		reg16_t reg_pc, reg_elr[4], &reg_lr;
+		reg16_t reg_csr, reg_ecsr[4], &reg_lcsr;
+		reg8_t reg_epsw[4], &reg_psw;
+		reg16_t reg_sp, reg_ea;
+		reg8_t reg_dsr;
 
 		void SetMemoryModel(MemoryModel memory_model);
 		void Next();

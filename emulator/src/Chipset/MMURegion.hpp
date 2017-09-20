@@ -35,19 +35,20 @@ namespace casioemu
 		{
 		}
 
-		template<typename T>
+		template<typename T, T mask = (T)-1>
 		static uint8_t DefaultRead(MMURegion *region, size_t offset)
 		{
 			T *value = (T *)(region->userdata);
-			return (*value) >> (offset - region->base);
+			return ((*value) & mask) >> (offset - region->base);
 		}
 
-		template<typename T>
+		template<typename T, T mask = (T)-1>
 		static void DefaultWrite(MMURegion *region, size_t offset, uint8_t data)
 		{
 			T *value = (T *)(region->userdata);
 			*value &= ~((T)0xFF) << (offset - region->base);
 			*value |= ((T)data) << (offset - region->base);
+			*value &= ~mask;
 		}
 	};
 }
