@@ -41,12 +41,12 @@ namespace casioemu
 		screen_buffer = new uint8_t[0x0200];
 
 		region.Setup(0xF800, 0x0200, "Screen", screen_buffer, [](MMURegion *region, size_t offset) {
-			offset -= 0xF800;
+			offset -= region->base;
 			if ((offset & 0x000F) >= 0x000C)
 				return (uint8_t)0;
 			return ((uint8_t *)region->userdata)[offset];
 		}, [](MMURegion *region, size_t offset, uint8_t data) {
-			offset -= 0xF800;
+			offset -= region->base;
 			if ((offset & 0x000F) >= 0x000C)
 				return;
 			((uint8_t *)region->userdata)[offset] = data;

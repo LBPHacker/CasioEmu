@@ -8,8 +8,9 @@ namespace casioemu
 {
 	class Keyboard : public Peripheral
 	{
-		MMURegion region_ko, region_ki;
-		uint8_t keyboard_out[2], keyboard_in, keyboard_ghost[8];
+		MMURegion region_ko_mask, region_ko, region_ki;
+		uint16_t keyboard_out, keyboard_out_mask;
+		uint8_t keyboard_in, keyboard_ghost[8];
 
 	    SDL_Renderer *renderer;
 
@@ -25,6 +26,8 @@ namespace casioemu
 			uint8_t ko_bit, ki_bit;
 			bool pressed, stuck;
 		} buttons[64];
+
+		bool p0, p1, p146;
 
 	public:
 		using Peripheral::Peripheral;

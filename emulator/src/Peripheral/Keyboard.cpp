@@ -71,24 +71,38 @@ namespace casioemu
 
 		region_ki.Setup(0xF040, 0x0001, "Keyboard/KI", this, [](MMURegion *region, size_t offset) {
 			return ((Keyboard *)region->userdata)->keyboard_in;
-		}, MMURegion::DefaultWrite, emulator);
+		}, MMURegion::IgnoreWrite, emulator);
 
-		region_ko.Setup(0xF046, 0x0002, "Keyboard/KO", this, [](MMURegion *region, size_t offset) {
-			offset -= 0xF046;
+		region_ko_mask.Setup(0xF044, 0x0002, "Keyboard/KOMask", this, [](MMURegion *region, size_t offset) {
+			offset -= region->base;
 			Keyboard *keyboard = ((Keyboard *)region->userdata);
-			return keyboard->keyboard_out[offset];
+			return (uint8_t)(keyboard->keyboard_out_mask >> offset);
 		}, [](MMURegion *region, size_t offset, uint8_t data) {
-			offset -= 0xF046;
+			offset -= region->base;
 			Keyboard *keyboard = ((Keyboard *)region->userdata);
-			keyboard->keyboard_out[offset] = data;
-			if (offset == 0)
-				keyboard->RecalculateKI();
+			keyboard->keyboard_out_mask &= ~(((uint16_t)0xFF) << offset);
+			keyboard->keyboard_out_mask |= ~(((uint16_t)data) << offset);
+			keyboard->RecalculateKI();
 		}, emulator);
 
+		region_ko.Setup(0xF046, 0x0002, "Keyboard/KO", this, [](MMURegion *region, size_t offset) {
+			offset -= region->base;
+			Keyboard *keyboard = ((Keyboard *)region->userdata);
+			return (uint8_t)(keyboard->keyboard_out >> offset);
+		}, [](MMURegion *region, size_t offset, uint8_t data) {
+			offset -= region->base;
+			Keyboard *keyboard = ((Keyboard *)region->userdata);
+			keyboard->keyboard_out &= ~(((uint16_t)0xFF) << offset);
+			keyboard->keyboard_out |= ~(((uint16_t)data) << offset);
+			keyboard->RecalculateKI();
+		}, emulator);
+
+		p0 = false;
+		p1 = false;
+		p146 = false;
+		keyboard_out = 0;
+		keyboard_out_mask = 0;
 		RecalculateGhost();
-		keyboard_out[0] = 0;
-		RecalculateKI();
-		keyboard_out[1] = 0;
 	}
 
 	void Keyboard::Uninitialise()
@@ -219,22 +233,28 @@ namespace casioemu
 						keyboard_ghost[gx] = ghost_mask;
 			}
 		}
+
+		RecalculateKI();
 	}
 
 	void Keyboard::RecalculateKI()
 	{
 		uint8_t keyboard_out_ghosted = 0;
-		{
-			size_t ix = 0;
-			for (uint8_t ko_bit = 1; ko_bit; ko_bit <<= 1, ++ix)
-				if (keyboard_out[0] & ko_bit)
-					keyboard_out_ghosted |= keyboard_ghost[ix];
-		}
+		for (size_t ix = 0; ix != 7; ++ix)
+			if (keyboard_out & keyboard_out_mask & (1 << ix))
+				keyboard_out_ghosted |= keyboard_ghost[ix];
 
 		keyboard_in = 0xFF;
 		for (auto &button : buttons)
 			if (button.type == Button::BT_BUTTON && button.pressed && button.ko_bit & keyboard_out_ghosted)
 				keyboard_in &= ~button.ki_bit;
+
+		if (keyboard_out & keyboard_out_mask & (1 << 7) && p0)
+			keyboard_in &= 0x7F;
+		if (keyboard_out & keyboard_out_mask & (1 << 8) && p1)
+			keyboard_in &= 0x7F;
+		if (keyboard_out & keyboard_out_mask & (1 << 9) && p146)
+			keyboard_in &= 0x7F;
 	}
 
 	void Keyboard::ReleaseAll()

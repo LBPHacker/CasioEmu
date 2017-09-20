@@ -26,14 +26,29 @@ namespace casioemu
 		void Setup(size_t base, size_t size, std::string description, void *userdata, ReadFunction read, WriteFunction write, Emulator &emulator);
 
 		template<uint8_t R>
-		static uint8_t DefaultRead(MMURegion *region, size_t offset)
+		static uint8_t IgnoreRead(MMURegion *region, size_t offset)
 		{
 			return R;
 		}
 
-		static void DefaultWrite(MMURegion *region, size_t offset, uint8_t data)
+		static void IgnoreWrite(MMURegion *region, size_t offset, uint8_t data)
 		{
 		}
+
+		// template<typename T>
+		// static uint8_t DefaultRead(MMURegion *region, size_t offset)
+		// {
+		// 	T *value = (T *)(region->userdata);
+		// 	return (*value) >> (offset - region->base);
+		// }
+
+		// template<typename T>
+		// static void DefaultWrite(MMURegion *region, size_t offset, uint8_t data)
+		// {
+		// 	T *value = (T *)(region->userdata);
+		// 	*value &= ~((T)0xFF) << (offset - region->base);
+		// 	*value |= ((T)data) << (offset - region->base);
+		// }
 	};
 }
 
