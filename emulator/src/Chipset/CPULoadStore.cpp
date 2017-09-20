@@ -46,7 +46,7 @@ namespace casioemu
 		size_t reg_base = impl_operands[0].value;
 		if (impl_hint & H_ST)
 		{
-			for (size_t ix = 0; ix != length; ++ix)
+			for (size_t ix = length - 1; ix != -1; --ix)
 				emulator.chipset.mmu.WriteData((((size_t)reg_dsr) << 16) | (uint16_t)(offset + ix), reg_r[reg_base + ix]);
 		}
 		else

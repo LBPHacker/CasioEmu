@@ -80,7 +80,7 @@ namespace casioemu
 		size_t register_size = impl_opcode >> 8;
 
 		if (impl_hint & H_ST)
-			for (size_t ix = 0; ix != register_size; ++ix)
+			for (size_t ix = register_size - 1; ix != -1; --ix)
 				emulator.chipset.mmu.WriteData((((size_t)reg_dsr) << 16) | (uint16_t)(reg_ea + ix), reg_cr[op0_index + ix]
 				);
 		else

@@ -82,7 +82,8 @@ namespace casioemu
 			Keyboard *keyboard = ((Keyboard *)region->userdata);
 			keyboard->keyboard_out_mask &= ~(((uint16_t)0xFF) << offset);
 			keyboard->keyboard_out_mask |= ~(((uint16_t)data) << offset);
-			keyboard->RecalculateKI();
+			if (!offset)
+				keyboard->RecalculateKI();
 		}, emulator);
 
 		region_ko.Setup(0xF046, 2, "Keyboard/KO", this, [](MMURegion *region, size_t offset) {
@@ -94,7 +95,8 @@ namespace casioemu
 			Keyboard *keyboard = ((Keyboard *)region->userdata);
 			keyboard->keyboard_out &= ~(((uint16_t)0xFF) << offset);
 			keyboard->keyboard_out |= ~(((uint16_t)data) << offset);
-			keyboard->RecalculateKI();
+			if (!offset)
+				keyboard->RecalculateKI();
 		}, emulator);
 
 		p0 = false;

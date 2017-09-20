@@ -13,7 +13,7 @@ namespace casioemu
 		if (push_size == 1)
 			push_size = 2;
 		reg_sp -= push_size;
-		for (size_t ix = 0; ix != impl_operands[1].register_size; ++ix)
+		for (size_t ix = impl_operands[1].register_size - 1; ix != -1; --ix)
 			emulator.chipset.mmu.WriteData(reg_sp + ix, impl_operands[1].value >> (8 * ix));
 	}
 
@@ -71,8 +71,8 @@ namespace casioemu
 	void CPU::Push16(uint16_t data)
 	{
 		reg_sp -= 2;
-		emulator.chipset.mmu.WriteData(reg_sp, data & 0xFF);
 		emulator.chipset.mmu.WriteData(reg_sp + 1, data >> 8);
+		emulator.chipset.mmu.WriteData(reg_sp, data & 0xFF);
 	}
 
 	uint16_t CPU::Pop16()
