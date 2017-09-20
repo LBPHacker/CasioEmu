@@ -441,8 +441,8 @@ namespace casioemu
 	void CPU::Raise(size_t exception_level, size_t index)
 	{
 		if (exception_level == 1)
-			reg_psw.raw &= ~CPU::PSW_MIE;
-		reg_psw.raw = (reg_psw.raw & ~CPU::PSW_ELEVEL) | exception_level;
+			reg_psw.raw &= ~PSW_MIE;
+		reg_psw.raw = (reg_psw.raw & ~PSW_ELEVEL) | exception_level;
 
 		reg_elr[exception_level].raw = reg_pc.raw;
 		reg_ecsr[exception_level].raw = reg_csr.raw;
@@ -453,7 +453,12 @@ namespace casioemu
 
 	size_t CPU::GetExceptionLevel()
 	{
-		return reg_psw.raw & CPU::PSW_ELEVEL;
+		return reg_psw.raw & PSW_ELEVEL;
+	}
+
+	bool CPU::GetMasterInterruptEnable()
+	{
+		return reg_psw & PSW_MIE;
 	}
 }
 

@@ -27,6 +27,14 @@ namespace casioemu
 			INT_COUNT = 128
 		};
 
+		enum RunMode
+		{
+			RM_STOP,
+			RM_HALT,
+			RM_RUN
+		};
+		RunMode run_mode;
+
 		std::forward_list<Peripheral *> peripherals;
 
 		/**
@@ -59,6 +67,8 @@ namespace casioemu
 		 */
 		void Reset();
 		void Break();
+		void Halt();
+		void Stop();
 		void RaiseEmulator();
 		void RaiseNonmaskable();
 		void RaiseMaskable(size_t index);

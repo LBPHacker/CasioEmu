@@ -132,6 +132,7 @@ namespace casioemu
 		void Reset();
 		void Raise(size_t exception_level, size_t index);
 		size_t GetExceptionLevel();
+		bool GetMasterInterruptEnable();
 
 	private:
 		uint16_t Fetch();

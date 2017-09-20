@@ -31,21 +31,6 @@ namespace casioemu
 		SpriteInfo interface_background;
 
 		/**
-		 * The cycle manager structure. This structure is reset every time the
-		 * emulator starts emulating CPU cycles and in every timer callback
-		 * it's queried for the number of cycles that need to be emulated in the
-		 * callback. This ensures that only as many cycles are emulated in a period
-		 * of time as many would be in real life.
-		 */
-		struct Cycles
-		{
-			Cycles(Uint64 cycles_per_second);
-			void Reset();
-			Uint64 GetDelta();
-			Uint64 ticks_at_reset, cycles_emulated, cycles_per_second, performance_frequency;
-		} cycles;
-
-		/**
 		 * A bunch of internally used methods for encapsulation purposes.
 		 */
 		void LoadModelDefition();
@@ -63,6 +48,23 @@ namespace casioemu
 		int lua_model_ref, lua_pre_tick_ref, lua_post_tick_ref;
 		std::map<std::string, std::string> &argv_map;
 
+	private:
+		/**
+		 * The cycle manager structure. This structure is reset every time the
+		 * emulator starts emulating CPU cycles and in every timer callback
+		 * it's queried for the number of cycles that need to be emulated in the
+		 * callback. This ensures that only as many cycles are emulated in a period
+		 * of time as many would be in real life.
+		 */
+		struct Cycles
+		{
+			Cycles(Uint64 cycles_per_second);
+			void Reset();
+			Uint64 GetDelta();
+			Uint64 ticks_at_reset, cycles_emulated, cycles_per_second, performance_frequency;
+		} cycles;
+
+	public:
 		/**
 		 * A reference to the emulator chipset. This object holds all CPU, MMU, memory and
 		 * peripheral state. The emulator interfaces with the chipset by issuing interrupts

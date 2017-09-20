@@ -9,6 +9,7 @@
 #include "../Peripheral/BatteryBackedRAM.hpp"
 #include "../Peripheral/Screen.hpp"
 #include "../Peripheral/Keyboard.hpp"
+#include "../Peripheral/StandbyControl.hpp"
 
 #include <fstream>
 
@@ -32,6 +33,7 @@ namespace casioemu
 		peripherals.push_front(new BatteryBackedRAM(emulator));
 		peripherals.push_front(new Screen(emulator));
 		peripherals.push_front(new Keyboard(emulator));
+		peripherals.push_front(new StandbyControl(emulator));
 	}
 
 	Chipset::~Chipset()
@@ -66,6 +68,8 @@ namespace casioemu
 
 		interrupts_active[INT_RESET] = true;
 		pending_interrupt_count = 1;
+
+		run_mode = RM_RUN;
 	}
 
 	void Chipset::Break()
@@ -80,6 +84,16 @@ namespace casioemu
 			return;
 		interrupts_active[INT_BREAK] = true;
 		pending_interrupt_count++;
+	}
+
+	void Chipset::Halt()
+	{
+		run_mode = RM_HALT;
+	}
+
+	void Chipset::Stop()
+	{
+		run_mode = RM_STOP;
 	}
 
 	void Chipset::RaiseEmulator()
@@ -173,9 +187,10 @@ namespace casioemu
 			break;
 		}
 
-		cpu.Raise(exception_level, index);
+		if (!(index >= INT_MASKABLE && index < INT_SOFTWARE && !cpu.GetMasterInterruptEnable()))
+			cpu.Raise(exception_level, index);
 
-		// logger::Info("PC is %04X\n", cpu.reg_pc.raw);
+		run_mode = RM_RUN;
 
 		// * TODO: introduce delay
 
@@ -193,13 +208,15 @@ namespace casioemu
 	{
 		// * TODO: decrement delay counter, return if it's not 0
 
-		for (auto peripheral : peripherals)
-			peripheral->Tick();
+		if (run_mode != RM_STOP)
+			for (auto peripheral : peripherals)
+				peripheral->Tick();
 
 		if (pending_interrupt_count)
 			AcceptInterrupt();
 
-		cpu.Next();
+		if (run_mode == RM_RUN)
+			cpu.Next();
 	}
 
 	void Chipset::UIEvent(SDL_Event &event)

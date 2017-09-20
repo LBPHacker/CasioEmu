@@ -69,11 +69,11 @@ namespace casioemu
 			lua_pop(emulator.lua_state, 2);
 		}
 
-		region_ki.Setup(0xF040, 0x0001, "Keyboard/KI", this, [](MMURegion *region, size_t offset) {
+		region_ki.Setup(0xF040, 1, "Keyboard/KI", this, [](MMURegion *region, size_t offset) {
 			return ((Keyboard *)region->userdata)->keyboard_in;
 		}, MMURegion::IgnoreWrite, emulator);
 
-		region_ko_mask.Setup(0xF044, 0x0002, "Keyboard/KOMask", this, [](MMURegion *region, size_t offset) {
+		region_ko_mask.Setup(0xF044, 2, "Keyboard/KOMask", this, [](MMURegion *region, size_t offset) {
 			offset -= region->base;
 			Keyboard *keyboard = ((Keyboard *)region->userdata);
 			return (uint8_t)(keyboard->keyboard_out_mask >> offset);
@@ -85,7 +85,7 @@ namespace casioemu
 			keyboard->RecalculateKI();
 		}, emulator);
 
-		region_ko.Setup(0xF046, 0x0002, "Keyboard/KO", this, [](MMURegion *region, size_t offset) {
+		region_ko.Setup(0xF046, 2, "Keyboard/KO", this, [](MMURegion *region, size_t offset) {
 			offset -= region->base;
 			Keyboard *keyboard = ((Keyboard *)region->userdata);
 			return (uint8_t)(keyboard->keyboard_out >> offset);
