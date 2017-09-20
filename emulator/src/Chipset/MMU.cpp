@@ -130,14 +130,14 @@ namespace casioemu
 		MMURegion **segment = segment_dispatch[segment_index];
 		if (!segment)
 		{
-			logger::Info("write to offset %04zX of unmapped segment %02zX\n", segment_offset, segment_index);
+			logger::Info("write to offset %04zX of unmapped segment %02zX (%02zX)\n", segment_offset, segment_index, data);
 			return;
 		}
 
 		MMURegion *region = segment[segment_offset];
 		if (!region)
 		{
-			logger::Info("write to unmapped offset %04zX of segment %02zX\n", segment_offset, segment_index);
+			logger::Info("write to unmapped offset %04zX of segment %02zX (%02zX)\n", segment_offset, segment_index, data);
 			return;
 		}
 
@@ -147,13 +147,21 @@ namespace casioemu
 	void MMU::RegisterRegion(MMURegion *region)
 	{
 		for (size_t ix = region->base; ix != region->base + region->size; ++ix)
+		{
+			if (segment_dispatch[ix >> 16][ix & 0xFFFF])
+				PANIC("MMU region overlap at %06zX\n", ix);
 			segment_dispatch[ix >> 16][ix & 0xFFFF] = region;
+		}
 	}
 
 	void MMU::UnregisterRegion(MMURegion *region)
 	{
 		for (size_t ix = region->base; ix != region->base + region->size; ++ix)
+		{
+			if (!segment_dispatch[ix >> 16][ix & 0xFFFF])
+				PANIC("MMU region double-hole at %06zX\n", ix);
 			segment_dispatch[ix >> 16][ix & 0xFFFF] = nullptr;
+		}
 	}
 }
 
