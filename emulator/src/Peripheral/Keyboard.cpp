@@ -11,9 +11,11 @@ namespace casioemu
 {
 	void Keyboard::Initialise()
 	{
-		{
-	    	renderer = emulator.GetRenderer();
+	    renderer = emulator.GetRenderer();
 
+		interrupt_source.Setup(5, emulator);
+
+		{
 			for (auto &button : buttons)
 				button.type = Button::BT_NONE;
 
@@ -57,8 +59,8 @@ namespace casioemu
 				button.rect.y = lua_tointeger(emulator.lua_state, -4);
 				button.rect.w = lua_tointeger(emulator.lua_state, -3);
 				button.rect.h = lua_tointeger(emulator.lua_state, -2);
-				button.ko_bit = (code >> 4) & 0xF;
-				button.ki_bit = code & 0xF;
+				button.ko_bit = 1 << ((code >> 4) & 0xF);
+				button.ki_bit = 1 << (code & 0xF);
 
 				lua_pop(emulator.lua_state, 6);
 
@@ -69,19 +71,18 @@ namespace casioemu
 			lua_pop(emulator.lua_state, 2);
 		}
 
-		region_ki.Setup(0xF040, 1, "Keyboard/KI", this, [](MMURegion *region, size_t offset) {
-			return ((Keyboard *)region->userdata)->keyboard_in;
-		}, MMURegion::IgnoreWrite, emulator);
+		region_ki.Setup(0xF040, 1, "Keyboard/KI", &keyboard_in, MMURegion::DefaultRead<uint8_t>, MMURegion::IgnoreWrite, emulator);
 
 		region_ko_mask.Setup(0xF044, 2, "Keyboard/KOMask", this, [](MMURegion *region, size_t offset) {
 			offset -= region->base;
 			Keyboard *keyboard = ((Keyboard *)region->userdata);
-			return (uint8_t)(keyboard->keyboard_out_mask >> offset);
+			return (uint8_t)((keyboard->keyboard_out_mask & 0x03FF) >> (offset * 8));
 		}, [](MMURegion *region, size_t offset, uint8_t data) {
 			offset -= region->base;
 			Keyboard *keyboard = ((Keyboard *)region->userdata);
-			keyboard->keyboard_out_mask &= ~(((uint16_t)0xFF) << offset);
-			keyboard->keyboard_out_mask |= ~(((uint16_t)data) << offset);
+			keyboard->keyboard_out_mask &= ~(((uint16_t)0xFF) << (offset * 8));
+			keyboard->keyboard_out_mask |= ((uint16_t)data) << (offset * 8);
+			keyboard->keyboard_out_mask &= 0x03FF;
 			if (!offset)
 				keyboard->RecalculateKI();
 		}, emulator);
@@ -89,12 +90,13 @@ namespace casioemu
 		region_ko.Setup(0xF046, 2, "Keyboard/KO", this, [](MMURegion *region, size_t offset) {
 			offset -= region->base;
 			Keyboard *keyboard = ((Keyboard *)region->userdata);
-			return (uint8_t)(keyboard->keyboard_out >> offset);
+			return (uint8_t)((keyboard->keyboard_out & 0x03FF) >> (offset * 8));
 		}, [](MMURegion *region, size_t offset, uint8_t data) {
 			offset -= region->base;
 			Keyboard *keyboard = ((Keyboard *)region->userdata);
-			keyboard->keyboard_out &= ~(((uint16_t)0xFF) << offset);
-			keyboard->keyboard_out |= ~(((uint16_t)data) << offset);
+			keyboard->keyboard_out &= ~(((uint16_t)0xFF) << (offset * 8));
+			keyboard->keyboard_out |= ((uint16_t)data) << (offset * 8);
+			keyboard->keyboard_out &= 0x03FF;
 			if (!offset)
 				keyboard->RecalculateKI();
 		}, emulator);
@@ -105,14 +107,20 @@ namespace casioemu
 		keyboard_out = 0;
 		keyboard_out_mask = 0;
 		RecalculateGhost();
-	}
 
-	void Keyboard::Uninitialise()
-	{
+		input_change = false;
 	}
 
 	void Keyboard::Tick()
 	{
+		if (input_change)
+			interrupt_source.TryRaise();
+	}
+
+	void Keyboard::TickAfterInterrupts()
+	{
+		if (input_change && interrupt_source.Success())
+			input_change = false;
 	}
 
 	void Keyboard::Frame()
@@ -161,6 +169,8 @@ namespace casioemu
 		{
 			if (button.rect.x <= x && button.rect.y <= y && button.rect.x + button.rect.w > x && button.rect.y + button.rect.h > y)
 			{
+				bool old_pressed = button.pressed;
+
 				if (stick)
 				{
 					button.stuck = !button.stuck;
@@ -168,7 +178,9 @@ namespace casioemu
 				}
 				else
 					button.pressed = true;
-				RecalculateGhost();
+
+				if (button.pressed != old_pressed)
+					RecalculateGhost();
 				break;
 			}
 		}
@@ -236,6 +248,7 @@ namespace casioemu
 			}
 		}
 
+		input_change = true;
 		RecalculateKI();
 	}
 
@@ -243,7 +256,7 @@ namespace casioemu
 	{
 		uint8_t keyboard_out_ghosted = 0;
 		for (size_t ix = 0; ix != 7; ++ix)
-			if (keyboard_out & keyboard_out_mask & (1 << ix))
+			if (keyboard_out & ~keyboard_out_mask & (1 << ix))
 				keyboard_out_ghosted |= keyboard_ghost[ix];
 
 		keyboard_in = 0xFF;
@@ -251,20 +264,30 @@ namespace casioemu
 			if (button.type == Button::BT_BUTTON && button.pressed && button.ko_bit & keyboard_out_ghosted)
 				keyboard_in &= ~button.ki_bit;
 
-		if (keyboard_out & keyboard_out_mask & (1 << 7) && p0)
+		if (keyboard_out & ~keyboard_out_mask & (1 << 7) && p0)
 			keyboard_in &= 0x7F;
-		if (keyboard_out & keyboard_out_mask & (1 << 8) && p1)
+		if (keyboard_out & ~keyboard_out_mask & (1 << 8) && p1)
 			keyboard_in &= 0x7F;
-		if (keyboard_out & keyboard_out_mask & (1 << 9) && p146)
+		if (keyboard_out & ~keyboard_out_mask & (1 << 9) && p146)
 			keyboard_in &= 0x7F;
 	}
 
 	void Keyboard::ReleaseAll()
 	{
+		bool had_effect = false;
 		for (auto &button : buttons)
+		{
 			if (!button.stuck)
-				button.pressed = false;
-		RecalculateGhost();
+			{
+				if (button.pressed)
+				{
+					button.pressed = false;
+					had_effect = true;
+				}
+			}
+		}
+		if (had_effect)
+			RecalculateGhost();
 	}
 }
 

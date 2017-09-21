@@ -14,7 +14,7 @@ namespace casioemu
 	MMURegion::~MMURegion()
 	{
 		if (setup_done)
-			emulator->chipset.mmu.UnregisterRegion(this);
+			Kill();
 	}
 
 	void MMURegion::Setup(size_t _base, size_t _size, std::string _description, void *_userdata, ReadFunction _read, WriteFunction _write, Emulator &_emulator)
@@ -32,6 +32,12 @@ namespace casioemu
 
 		emulator->chipset.mmu.RegisterRegion(this);
 		setup_done = true;
+	}
+
+	void MMURegion::Kill()
+	{
+		emulator->chipset.mmu.UnregisterRegion(this);
+		setup_done = false;
 	}
 }
 

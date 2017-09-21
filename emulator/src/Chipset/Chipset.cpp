@@ -11,6 +11,7 @@
 #include "../Peripheral/Keyboard.hpp"
 #include "../Peripheral/StandbyControl.hpp"
 #include "../Peripheral/Miscellaneous.hpp"
+#include "../Peripheral/Timer.hpp"
 
 #include <fstream>
 
@@ -20,15 +21,38 @@ namespace casioemu
 	{
 		cpu.SetMemoryModel(CPU::MM_LARGE);
 
+		for (auto &segment_index : mmu_segments)
+			mmu.GenerateSegmentDispatch(segment_index);
+
 		ConstructPeripherals();
+	}
+
+	Chipset::~Chipset()
+	{
+		DestructPeripherals();
+		DestructInterruptSFR();
+
+		delete &mmu;
+		delete &cpu;
+	}
+
+	void Chipset::ConstructInterruptSFR()
+	{
+		region_int_mask.Setup(0xF010, 2, "Chipset/InterruptMask", &data_int_mask, MMURegion::DefaultRead<uint16_t, interrupt_bitfield_mask>, MMURegion::DefaultWrite<uint16_t, interrupt_bitfield_mask>, emulator);
+		data_int_mask = 0;
+
+		region_int_pending.Setup(0xF014, 2, "Chipset/InterruptPending", &data_int_pending, MMURegion::DefaultRead<uint16_t, interrupt_bitfield_mask>, MMURegion::DefaultWrite<uint16_t, interrupt_bitfield_mask>, emulator);
+		data_int_pending = 0;
+	}
+
+	void Chipset::DestructInterruptSFR()
+	{
+		region_int_pending.Kill();
+		region_int_mask.Kill();
 	}
 
 	void Chipset::ConstructPeripherals()
 	{
-		mmu.GenerateSegmentDispatch(0);
-		mmu.GenerateSegmentDispatch(1);
-		mmu.GenerateSegmentDispatch(8);
-
 		// * TODO: Add more peripherals here.
 		peripherals.push_front(new ROMWindow(emulator));
 		peripherals.push_front(new BatteryBackedRAM(emulator));
@@ -36,18 +60,16 @@ namespace casioemu
 		peripherals.push_front(new Keyboard(emulator));
 		peripherals.push_front(new StandbyControl(emulator));
 		peripherals.push_front(new Miscellaneous(emulator));
+		peripherals.push_front(new Timer(emulator));
 	}
 
-	Chipset::~Chipset()
+	void Chipset::DestructPeripherals()
 	{
 		for (auto &peripheral : peripherals)
 		{
 			peripheral->Uninitialise();
 			delete peripheral;
 		}
-
-		delete &mmu;
-		delete &cpu;
 	}
 
 	void Chipset::SetupInternals()
@@ -59,6 +81,8 @@ namespace casioemu
 
 		for (auto &peripheral : peripherals)
 			peripheral->Initialise();
+
+		ConstructInterruptSFR();
 
 		cpu.SetupInternals();
 		mmu.SetupInternals();
@@ -189,8 +213,19 @@ namespace casioemu
 			break;
 		}
 
-		if (!(index >= INT_MASKABLE && index < INT_SOFTWARE && !cpu.GetMasterInterruptEnable()))
+		if (index >= INT_MASKABLE && index < INT_SOFTWARE)
+		{
+			if (InterruptEnabledBySFR(index))
+			{
+				SetInterruptPendingSFR(index);
+				if (cpu.GetMasterInterruptEnable())
+					cpu.Raise(exception_level, index);
+			}
+		}
+		else
+		{
 			cpu.Raise(exception_level, index);
+		}
 
 		run_mode = RM_RUN;
 
@@ -198,6 +233,32 @@ namespace casioemu
 
 		interrupts_active[index] = false;
 		pending_interrupt_count--;
+	}
+
+	bool Chipset::InterruptEnabledBySFR(size_t index)
+	{
+		return data_int_mask & (1 << (index - managed_interrupt_base));
+	}
+
+	bool Chipset::GetInterruptPendingSFR(size_t index)
+	{
+		return data_int_pending & (1 << (index - managed_interrupt_base));
+	}
+
+	void Chipset::SetInterruptPendingSFR(size_t index)
+	{
+		data_int_pending |= (1 << (index - managed_interrupt_base));
+	}
+
+	bool Chipset::TryRaiseMaskable(size_t index)
+	{
+		if (!InterruptEnabledBySFR(index))
+			return false;
+		if (GetInterruptPendingSFR(index))
+			return false;
+
+		RaiseMaskable(index);
+		return true;
 	}
 
 	void Chipset::Frame()
@@ -210,12 +271,14 @@ namespace casioemu
 	{
 		// * TODO: decrement delay counter, return if it's not 0
 
-		if (run_mode != RM_STOP)
-			for (auto peripheral : peripherals)
-				peripheral->Tick();
+		for (auto peripheral : peripherals)
+			peripheral->Tick();
 
 		if (pending_interrupt_count)
 			AcceptInterrupt();
+
+		for (auto peripheral : peripherals)
+			peripheral->TickAfterInterrupts();
 
 		if (run_mode == RM_RUN)
 			cpu.Next();

@@ -25,17 +25,5 @@ namespace casioemu
 	{
 		delete[] ram_buffer;
 	}
-
-	void BatteryBackedRAM::Tick()
-	{
-	}
-
-	void BatteryBackedRAM::Frame()
-	{
-	}
-
-	void BatteryBackedRAM::UIEvent(SDL_Event &event)
-	{
-	}
 }
 

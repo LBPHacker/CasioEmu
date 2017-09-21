@@ -3,6 +3,7 @@
 
 #include "Peripheral.hpp"
 #include "../Chipset/MMURegion.hpp"
+#include "../Chipset/InterruptSource.hpp"
 
 namespace casioemu
 {
@@ -11,6 +12,9 @@ namespace casioemu
 		MMURegion region_ko_mask, region_ko, region_ki;
 		uint16_t keyboard_out, keyboard_out_mask;
 		uint8_t keyboard_in, keyboard_ghost[8];
+
+		bool input_change;
+		InterruptSource interrupt_source;
 
 	    SDL_Renderer *renderer;
 
@@ -33,8 +37,8 @@ namespace casioemu
 		using Peripheral::Peripheral;
 
 		void Initialise();
-		void Uninitialise();
 		void Tick();
+		void TickAfterInterrupts();
 		void Frame();
 		void UIEvent(SDL_Event &event);
 		void PressAt(int x, int y, bool stick);

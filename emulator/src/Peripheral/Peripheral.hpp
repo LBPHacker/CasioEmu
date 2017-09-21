@@ -14,11 +14,12 @@ namespace casioemu
 
 	public:
 		Peripheral(Emulator &emulator);
-		virtual void Initialise() = 0;
-		virtual void Uninitialise() = 0;
-		virtual void Tick() = 0;
-		virtual void Frame() = 0;
-		virtual void UIEvent(SDL_Event &event) = 0;
+		virtual void Initialise();
+		virtual void Uninitialise();
+		virtual void Tick();
+		virtual void TickAfterInterrupts();
+		virtual void Frame();
+		virtual void UIEvent(SDL_Event &event);
 		virtual ~Peripheral();
 	};
 }

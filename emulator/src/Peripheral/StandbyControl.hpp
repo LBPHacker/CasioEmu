@@ -16,10 +16,6 @@ namespace casioemu
 		using Peripheral::Peripheral;
 
 		void Initialise();
-		void Uninitialise();
-		void Tick();
-		void Frame();
-		void UIEvent(SDL_Event &event);
 	};
 }
 

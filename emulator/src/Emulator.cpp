@@ -10,7 +10,7 @@
 
 namespace casioemu
 {
-	Emulator::Emulator(std::map<std::string, std::string> &_argv_map, Uint32 _timer_interval, Uint32 _cycles_per_second, bool _paused) : paused(_paused), argv_map(_argv_map), cycles(_cycles_per_second), chipset(*new Chipset(*this))
+	Emulator::Emulator(std::map<std::string, std::string> &_argv_map, unsigned int _timer_interval, unsigned int _cycles_per_second, bool _paused) : paused(_paused), argv_map(_argv_map), cycles(_cycles_per_second), chipset(*new Chipset(*this))
 	{
 		std::lock_guard<std::mutex> access_lock(access_mx);
 		running = true;
@@ -51,7 +51,7 @@ namespace casioemu
 		timer_id = SDL_AddTimer(timer_interval, [](Uint32 delay, void *param) {
 			Emulator *emulator = (Emulator *)param;
 			emulator->TimerCallback();
-			return emulator->timer_interval;
+			return (Uint32)emulator->timer_interval;
 		}, this);
 
 		RunStartupScript();
@@ -305,14 +305,19 @@ namespace casioemu
 		return diff;
 	}
 
-    SDL_Renderer *Emulator::GetRenderer()
-    {
-    	return renderer;
-    }
+	SDL_Renderer *Emulator::GetRenderer()
+	{
+		return renderer;
+	}
 
-    SDL_Texture *Emulator::GetInterfaceTexture()
-    {
-    	return interface_texture;
-    }
+	SDL_Texture *Emulator::GetInterfaceTexture()
+	{
+		return interface_texture;
+	}
+
+	unsigned int Emulator::GetCyclesPerSecond()
+	{
+		return cycles.cycles_per_second;
+	}
 }
 

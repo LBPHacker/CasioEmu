@@ -22,21 +22,5 @@ namespace casioemu
 		region_F041.Setup(0xF041, 1, "Miscellaneous/Unknown/F041*1", &data_F041, MMURegion::DefaultRead<uint8_t>, MMURegion::DefaultWrite<uint8_t>, emulator);
 		region_F042.Setup(0xF042, 1, "Miscellaneous/Unknown/F042*1", &data_F042, MMURegion::DefaultRead<uint8_t>, MMURegion::DefaultWrite<uint8_t>, emulator);
 	}
-
-	void Miscellaneous::Uninitialise()
-	{
-	}
-
-	void Miscellaneous::Tick()
-	{
-	}
-
-	void Miscellaneous::Frame()
-	{
-	}
-
-	void Miscellaneous::UIEvent(SDL_Event &event)
-	{
-	}
 }
 

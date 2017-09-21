@@ -36,21 +36,5 @@ namespace casioemu
 		stpacp_last = 0;
 		stop_acceptor_enabled = false;
 	}
-
-	void StandbyControl::Uninitialise()
-	{
-	}
-
-	void StandbyControl::Tick()
-	{
-	}
-
-	void StandbyControl::Frame()
-	{
-	}
-
-	void StandbyControl::UIEvent(SDL_Event &event)
-	{
-	}
 }
 

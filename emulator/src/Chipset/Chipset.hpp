@@ -1,6 +1,8 @@
 #pragma once
 #include "../Config.hpp"
 
+#include "MMURegion.hpp"
+
 #include <string>
 #include <vector>
 #include <forward_list>
@@ -44,7 +46,18 @@ namespace casioemu
 		bool interrupts_active[INT_COUNT];
 		void AcceptInterrupt();
 		void RaiseSoftware(size_t index);
+
+		const size_t mmu_segments[3] = {0, 1, 8};
+
 		void ConstructPeripherals();
+		void DestructPeripherals();
+
+		void ConstructInterruptSFR();
+		void DestructInterruptSFR();
+		MMURegion region_int_mask, region_int_pending;
+		uint16_t data_int_mask, data_int_pending;
+		static const size_t managed_interrupt_base = 4, managed_interrupt_amount = 13;
+		static const uint16_t interrupt_bitfield_mask = (1 << managed_interrupt_amount) - 1;
 
 	public:
 		Chipset(Emulator &emulator);
@@ -72,6 +85,10 @@ namespace casioemu
 		void RaiseEmulator();
 		void RaiseNonmaskable();
 		void RaiseMaskable(size_t index);
+		bool TryRaiseMaskable(size_t index);
+		bool InterruptEnabledBySFR(size_t index);
+		void SetInterruptPendingSFR(size_t index);
+		bool GetInterruptPendingSFR(size_t index);
 
 		void Tick();
 		void Frame();

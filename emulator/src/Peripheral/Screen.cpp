@@ -64,10 +64,6 @@ namespace casioemu
 		delete[] screen_buffer;
 	}
 
-	void Screen::Tick()
-	{
-	}
-
 	void Screen::Frame()
 	{
 		// * TODO: consider screen_range
@@ -141,9 +137,5 @@ namespace casioemu
 				}
 			}
 		}
-	}
-
-	void Screen::UIEvent(SDL_Event &event)
-	{
 	}
 }

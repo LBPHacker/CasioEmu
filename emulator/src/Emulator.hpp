@@ -23,9 +23,9 @@ namespace casioemu
 		SDL_Renderer *renderer;
 		SDL_Texture *interface_texture;
 		SDL_TimerID timer_id;
-		Uint32 timer_interval;
+		unsigned int timer_interval;
 		bool running, paused;
-		Uint32 last_frame_tick_count;
+		unsigned int last_frame_tick_count;
 		std::string model_path;
 
 		SpriteInfo interface_background;
@@ -40,7 +40,7 @@ namespace casioemu
 		void RunStartupScript();
 
 	public:
-		Emulator(std::map<std::string, std::string> &argv_map, Uint32 timer_interval, Uint32 cycles_per_second, bool paused = false);
+		Emulator(std::map<std::string, std::string> &argv_map, unsigned int timer_interval, unsigned int cycles_per_second, bool paused = false);
 		~Emulator();
 
 		std::mutex access_mx;
@@ -77,6 +77,7 @@ namespace casioemu
 		void Tick();
 		void Frame();
 		void ExecuteCommand(std::string command);
+		unsigned int GetCyclesPerSecond();
 		bool GetPaused();
 		void SetPaused(bool paused);
 		void UIEvent(SDL_Event &event);

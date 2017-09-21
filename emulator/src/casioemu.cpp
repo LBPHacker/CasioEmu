@@ -15,6 +15,7 @@
 
 using namespace casioemu;
 
+std::mutex input_mx;
 int main(int argc, char *argv[])
 {
 	std::map<std::string, std::string> argv_map;
@@ -54,9 +55,8 @@ int main(int argc, char *argv[])
 		PANIC("IMG_Init failed: %s\n", IMG_GetError());
 
 	{
-		Emulator emulator(argv_map, 20, 32768);
+		Emulator emulator(argv_map, 20, 128 * 1024);
 
-		std::mutex input_mx;
 		std::condition_variable input_cv;
 		bool input_processed;
 		std::string console_input_str;
@@ -133,6 +133,8 @@ int main(int argc, char *argv[])
 				break;
 			}
 		}
+
+		input_mx.lock();
 	}
 
 	IMG_Quit();

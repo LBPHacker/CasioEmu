@@ -25,49 +25,49 @@ namespace casioemu
 			uint16_t raw;
 		};
 
-		template<typename T>
+		template<typename value_type>
 		struct Register : public RegisterStub
 		{
-			Register<T>()
+			Register<value_type>()
 			{
-				type_size = sizeof(T);
+				type_size = sizeof(value_type);
 				name = "?";
 			}
 
-			operator T()
+			operator value_type()
 			{
 				read = true;
 				return raw;
 			}
 
-			Register<T> &operator =(T value)
+			Register<value_type> &operator =(value_type value)
 			{
 				written = true;
 				raw = value;
 				return *this;
 			}
 
-			Register<T> &operator &=(T value)
+			Register<value_type> &operator &=(value_type value)
 			{
 				return *this = raw & value;
 			}
 
-			Register<T> &operator |=(T value)
+			Register<value_type> &operator |=(value_type value)
 			{
 				return *this = raw | value;
 			}
 
-			Register<T> &operator ^=(T value)
+			Register<value_type> &operator ^=(value_type value)
 			{
 				return *this = raw ^ value;
 			}
 
-			Register<T> &operator +=(T value)
+			Register<value_type> &operator +=(value_type value)
 			{
 				return *this = raw + value;
 			}
 
-			Register<T> &operator -=(T value)
+			Register<value_type> &operator -=(value_type value)
 			{
 				return *this = raw - value;
 			}
