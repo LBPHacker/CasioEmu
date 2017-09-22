@@ -19,6 +19,10 @@ namespace casioemu
 {
 	Chipset::Chipset(Emulator &_emulator) : emulator(_emulator), cpu(*new CPU(emulator)), mmu(*new MMU(emulator))
 	{
+		for (size_t ix = 0; ix != INT_COUNT; ++ix)
+			interrupts_active[ix] = false;
+		pending_interrupt_count = 0;
+
 		cpu.SetMemoryModel(CPU::MM_LARGE);
 
 		for (auto &segment_index : mmu_segments)
