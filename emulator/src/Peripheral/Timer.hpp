@@ -16,7 +16,7 @@ namespace casioemu
 
 		InterruptSource interrupt_source;
 
-		bool counting;
+		bool counting, counting_request;
 		unsigned int ext_to_int_counter, ext_to_int_next, ext_to_int_int_done;
 		const unsigned int ext_to_int_frequency = 10000;
 

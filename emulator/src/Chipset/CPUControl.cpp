@@ -142,7 +142,7 @@ namespace casioemu
 		case 11: branch =   ov; break;
 		case 12: branch =   !s; break;
 		case 13: branch =    s; break;
-		case 14: branch = true; break;
+		default: branch = true; break;
 		}
 
 		if (branch)

@@ -23,18 +23,13 @@ namespace casioemu
 			self->data_control = data;
 			if (data & 0x01)
 			{
-				self->int_ticks_left = self->data_timeout;
-				if (self->int_ticks_left < 8)
-				{
-					logger::Info("[TIMER] clamping timeout to 8 (was %i)\n", self->int_ticks_left);
-					self->int_ticks_left = 8;
-				}
-
-				self->counting = true;
+				self->int_ticks_left = self->data_timeout + 1;
+				self->counting_request = true;
 			}
 		}, emulator);
 
 		counting = false;
+		counting_request = false;
 
 		ext_to_int_counter = 0;
 		ext_to_int_next = 0;
@@ -70,6 +65,12 @@ namespace casioemu
 
 		if (counting && int_ticks_left)
 			--int_ticks_left;
+
+		if (!counting && counting_request)
+		{
+			counting = true;
+			counting_request = false;
+		}
 	}
 }
 
