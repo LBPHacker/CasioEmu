@@ -21,14 +21,7 @@ namespace casioemu
 			ram_file_requested = true;
 
 			if (emulator.argv_map.find("clean_ram") == emulator.argv_map.end())
-			{
-				std::ifstream ram_handle(emulator.argv_map["ram"], std::ifstream::binary);
-				if (ram_handle.fail())
-					logger::Info("[BatteryBackedRAM] std::ifstream failed: %s\n", strerror(errno));
-				ram_handle.read((char *)ram_buffer, 0xE00);
-				if (ram_handle.fail())
-					logger::Info("[BatteryBackedRAM] std::ifstream failed: %s\n", strerror(errno));
-			}
+				LoadImage();
 		}
 
 		region.Setup(0x8000, 0x0E00, "BatteryBackedRAM", ram_buffer, [](MMURegion *region, size_t offset) {
@@ -40,20 +33,42 @@ namespace casioemu
 
 	void BatteryBackedRAM::Uninitialise()
 	{
-		if (ram_file_requested)
-		{
-			if (emulator.argv_map.find("preserve_ram") == emulator.argv_map.end())
-			{
-				std::ofstream ram_handle(emulator.argv_map["ram"], std::ofstream::binary);
-				if (ram_handle.fail())
-					logger::Info("[BatteryBackedRAM] std::ofstream failed: %s\n", strerror(errno));
-				ram_handle.write((char *)ram_buffer, 0xE00);
-				if (ram_handle.fail())
-					logger::Info("[BatteryBackedRAM] std::ofstream failed: %s\n", strerror(errno));
-			}
-		}
+		if (ram_file_requested && emulator.argv_map.find("preserve_ram") == emulator.argv_map.end())
+			SaveImage();
 
 		delete[] ram_buffer;
+	}
+
+	void BatteryBackedRAM::SaveImage()
+	{
+		std::ofstream ram_handle(emulator.argv_map["ram"], std::ofstream::binary);
+		if (ram_handle.fail())
+		{
+			logger::Info("[BatteryBackedRAM] std::ofstream failed: %s\n", strerror(errno));
+			return;
+		}
+		ram_handle.write((char *)ram_buffer, 0xE00);
+		if (ram_handle.fail())
+		{
+			logger::Info("[BatteryBackedRAM] std::ofstream failed: %s\n", strerror(errno));
+			return;
+		}
+	}
+
+	void BatteryBackedRAM::LoadImage()
+	{
+		std::ifstream ram_handle(emulator.argv_map["ram"], std::ifstream::binary);
+		if (ram_handle.fail())
+		{
+			logger::Info("[BatteryBackedRAM] std::ifstream failed: %s\n", strerror(errno));
+			return;
+		}
+		ram_handle.read((char *)ram_buffer, 0xE00);
+		if (ram_handle.fail())
+		{
+			logger::Info("[BatteryBackedRAM] std::ifstream failed: %s\n", strerror(errno));
+			return;
+		}
 	}
 }
 

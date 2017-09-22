@@ -12,6 +12,7 @@ namespace casioemu
 		size_t interrupt_index;
 
 	public:
+		InterruptSource();
 		void Setup(size_t interrupt_index, Emulator &_emulator);
 		bool TryRaise();
 		bool Success();

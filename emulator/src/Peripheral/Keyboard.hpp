@@ -9,11 +9,11 @@ namespace casioemu
 {
 	class Keyboard : public Peripheral
 	{
-		MMURegion region_ko_mask, region_ko, region_ki;
+		MMURegion region_ko_mask, region_ko, region_ki, region_input_filter;
 		uint16_t keyboard_out, keyboard_out_mask;
-		uint8_t keyboard_in, keyboard_ghost[8];
+		uint8_t keyboard_in, input_filter, keyboard_ghost[8];
 
-		bool input_change;
+		uint8_t has_input;
 		InterruptSource interrupt_source;
 
 	    SDL_Renderer *renderer;
@@ -38,7 +38,6 @@ namespace casioemu
 
 		void Initialise();
 		void Tick();
-		void TickAfterInterrupts();
 		void Frame();
 		void UIEvent(SDL_Event &event);
 		void PressAt(int x, int y, bool stick);

@@ -5,6 +5,11 @@
 
 namespace casioemu
 {
+	InterruptSource::InterruptSource()
+	{
+		setup_done = false;
+	}
+
 	void InterruptSource::Setup(size_t _interrupt_index, Emulator &_emulator)
 	{
 		if (setup_done)

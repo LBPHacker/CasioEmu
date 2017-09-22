@@ -24,6 +24,12 @@ namespace casioemu
 			if (data & 0x01)
 			{
 				self->int_ticks_left = self->data_timeout;
+				if (self->int_ticks_left < 8)
+				{
+					logger::Info("[TIMER] clamping timeout to 8 (was %i)\n", self->int_ticks_left);
+					self->int_ticks_left = 8;
+				}
+
 				self->counting = true;
 			}
 		}, emulator);
