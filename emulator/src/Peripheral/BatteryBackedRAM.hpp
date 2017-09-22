@@ -10,6 +10,7 @@ namespace casioemu
 	{
 		MMURegion region;
 		uint8_t *ram_buffer;
+		bool ram_file_requested;
 
 	public:
 		using Peripheral::Peripheral;

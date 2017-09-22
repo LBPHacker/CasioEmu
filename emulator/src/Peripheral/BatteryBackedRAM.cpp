@@ -5,24 +5,54 @@
 #include "../Chipset/Chipset.hpp"
 #include "../Logger.hpp"
 
+#include <fstream>
+
 namespace casioemu
 {
 	void BatteryBackedRAM::Initialise()
 	{
 		ram_buffer = new uint8_t[0xE00];
-		// * TODO: add option to load from file
 		for (size_t ix = 0; ix != 0xE00; ++ix)
 			ram_buffer[ix] = 0;
 
+		ram_file_requested = false;
+		if (emulator.argv_map.find("ram") != emulator.argv_map.end())
+		{
+			ram_file_requested = true;
+
+			if (emulator.argv_map.find("clean_ram") == emulator.argv_map.end())
+			{
+				std::ifstream ram_handle(emulator.argv_map["ram"], std::ifstream::binary);
+				if (ram_handle.fail())
+					logger::Info("[BatteryBackedRAM] std::ifstream failed: %s\n", strerror(errno));
+				ram_handle.read((char *)ram_buffer, 0xE00);
+				if (ram_handle.fail())
+					logger::Info("[BatteryBackedRAM] std::ifstream failed: %s\n", strerror(errno));
+			}
+		}
+
 		region.Setup(0x8000, 0x0E00, "BatteryBackedRAM", ram_buffer, [](MMURegion *region, size_t offset) {
-			return ((uint8_t *)region->userdata)[offset - 0x8000];
+			return ((uint8_t *)region->userdata)[offset - region->base];
 		}, [](MMURegion *region, size_t offset, uint8_t data) {
-			((uint8_t *)region->userdata)[offset - 0x8000] = data;
+			((uint8_t *)region->userdata)[offset - region->base] = data;
 		}, emulator);
 	}
 
 	void BatteryBackedRAM::Uninitialise()
 	{
+		if (ram_file_requested)
+		{
+			if (emulator.argv_map.find("preserve_ram") == emulator.argv_map.end())
+			{
+				std::ofstream ram_handle(emulator.argv_map["ram"], std::ofstream::binary);
+				if (ram_handle.fail())
+					logger::Info("[BatteryBackedRAM] std::ofstream failed: %s\n", strerror(errno));
+				ram_handle.write((char *)ram_buffer, 0xE00);
+				if (ram_handle.fail())
+					logger::Info("[BatteryBackedRAM] std::ofstream failed: %s\n", strerror(errno));
+			}
+		}
+
 		delete[] ram_buffer;
 	}
 }
