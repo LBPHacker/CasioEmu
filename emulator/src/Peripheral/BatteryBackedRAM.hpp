@@ -17,8 +17,8 @@ namespace casioemu
 
 		void Initialise();
 		void Uninitialise();
-		void SaveImage();
-		void LoadImage();
+		void SaveRAMImage();
+		void LoadRAMImage();
 	};
 }
 

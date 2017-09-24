@@ -60,6 +60,8 @@ namespace casioemu
 
 		if (argv_map.find("paused") != argv_map.end())
 			SetPaused(true);
+
+		pause_on_mem_error = argv_map.find("puase_on_mem_error") != argv_map.end();
 	}
 
 	Emulator::~Emulator()
@@ -74,6 +76,15 @@ namespace casioemu
 		luaL_unref(lua_state, LUA_REGISTRYINDEX, lua_model_ref);
 		lua_close(lua_state);
 		delete &chipset;
+	}
+
+	void Emulator::HandleMemoryError()
+	{
+		if (pause_on_mem_error)
+		{
+			logger::Info("execution paused due to memory error\n");
+			SetPaused(true);
+		}
 	}
 
 	void Emulator::UIEvent(SDL_Event &event)

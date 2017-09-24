@@ -81,6 +81,7 @@ namespace casioemu
 		if (!segment)
 		{
 			logger::Info("code read from offset %04zX of unmapped segment %02zX\n", segment_offset, segment_index);
+			emulator.HandleMemoryError();
 			return 0;
 		}
 
@@ -88,6 +89,7 @@ namespace casioemu
 		if (!region)
 		{
 			logger::Info("code read from unmapped offset %04zX of segment %02zX\n", segment_offset, segment_index);
+			emulator.HandleMemoryError();
 			return 0;
 		}
 
@@ -106,6 +108,7 @@ namespace casioemu
 		if (!segment)
 		{
 			logger::Info("read from offset %04zX of unmapped segment %02zX\n", segment_offset, segment_index);
+			emulator.HandleMemoryError();
 			return 0;
 		}
 
@@ -113,6 +116,7 @@ namespace casioemu
 		if (!region)
 		{
 			logger::Info("read from unmapped offset %04zX of segment %02zX\n", segment_offset, segment_index);
+			emulator.HandleMemoryError();
 			return 0;
 		}
 
@@ -131,6 +135,7 @@ namespace casioemu
 		if (!segment)
 		{
 			logger::Info("write to offset %04zX of unmapped segment %02zX (%02zX)\n", segment_offset, segment_index, data);
+			emulator.HandleMemoryError();
 			return;
 		}
 
@@ -138,6 +143,7 @@ namespace casioemu
 		if (!region)
 		{
 			logger::Info("write to unmapped offset %04zX of segment %02zX (%02zX)\n", segment_offset, segment_index, data);
+			emulator.HandleMemoryError();
 			return;
 		}
 

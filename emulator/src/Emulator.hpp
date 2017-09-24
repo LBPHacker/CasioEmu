@@ -27,6 +27,7 @@ namespace casioemu
 		bool running, paused;
 		unsigned int last_frame_tick_count;
 		std::string model_path;
+		bool pause_on_mem_error;
 
 		SpriteInfo interface_background;
 
@@ -73,6 +74,7 @@ namespace casioemu
 		Chipset &chipset;
 
 		bool Running();
+		void HandleMemoryError();
 		void Shutdown();
 		void Tick();
 		void Frame();

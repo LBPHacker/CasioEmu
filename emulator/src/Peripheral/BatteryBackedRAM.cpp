@@ -21,7 +21,7 @@ namespace casioemu
 			ram_file_requested = true;
 
 			if (emulator.argv_map.find("clean_ram") == emulator.argv_map.end())
-				LoadImage();
+				LoadRAMImage();
 		}
 
 		region.Setup(0x8000, 0x0E00, "BatteryBackedRAM", ram_buffer, [](MMURegion *region, size_t offset) {
@@ -34,12 +34,12 @@ namespace casioemu
 	void BatteryBackedRAM::Uninitialise()
 	{
 		if (ram_file_requested && emulator.argv_map.find("preserve_ram") == emulator.argv_map.end())
-			SaveImage();
+			SaveRAMImage();
 
 		delete[] ram_buffer;
 	}
 
-	void BatteryBackedRAM::SaveImage()
+	void BatteryBackedRAM::SaveRAMImage()
 	{
 		std::ofstream ram_handle(emulator.argv_map["ram"], std::ofstream::binary);
 		if (ram_handle.fail())
@@ -55,7 +55,7 @@ namespace casioemu
 		}
 	}
 
-	void BatteryBackedRAM::LoadImage()
+	void BatteryBackedRAM::LoadRAMImage()
 	{
 		std::ifstream ram_handle(emulator.argv_map["ram"], std::ifstream::binary);
 		if (ram_handle.fail())
