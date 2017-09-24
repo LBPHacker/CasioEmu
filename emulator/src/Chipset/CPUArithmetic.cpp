@@ -289,8 +289,8 @@ namespace casioemu
 
 		impl_flags_changed |= PSW_C | PSW_OV | PSW_HC;
 		impl_flags_out = (impl_flags_out & ~PSW_C) | (carry_8 ? PSW_C : 0);
-		impl_flags_out = (impl_flags_out & ~PSW_HC) | ((carry_8 ^ carry_7) ? PSW_OV : 0);
-		impl_flags_out = (impl_flags_out & ~PSW_OV) | (carry_4 ? PSW_HC : 0);
+		impl_flags_out = (impl_flags_out & ~PSW_OV) | ((carry_8 ^ carry_7) ? PSW_OV : 0);
+		impl_flags_out = (impl_flags_out & ~PSW_HC) | (carry_4 ? PSW_HC : 0);
 
 		impl_operands[0].value = (uint8_t)(op8[0] + op8[1] + c_in);
 	}
