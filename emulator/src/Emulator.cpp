@@ -61,7 +61,7 @@ namespace casioemu
 		if (argv_map.find("paused") != argv_map.end())
 			SetPaused(true);
 
-		pause_on_mem_error = argv_map.find("puase_on_mem_error") != argv_map.end();
+		pause_on_mem_error = argv_map.find("pause_on_mem_error") != argv_map.end();
 	}
 
 	Emulator::~Emulator()

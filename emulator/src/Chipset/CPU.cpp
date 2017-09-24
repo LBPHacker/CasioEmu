@@ -230,6 +230,9 @@ namespace casioemu
 
 	CPU::CPU(Emulator &_emulator) : emulator(_emulator), reg_lr(reg_elr[0]), reg_lcsr(reg_ecsr[0]), reg_psw(reg_epsw[0])
 	{
+		opcode_dispatch = new OpcodeSource *[0x10000];
+		for (size_t ix = 0; ix != 0x10000; ++ix)
+			opcode_dispatch[ix] = nullptr;
 	}
 
 	CPU::~CPU()
@@ -245,10 +248,6 @@ namespace casioemu
 
 	void CPU::SetupOpcodeDispatch()
 	{
-		opcode_dispatch = new OpcodeSource *[0x10000];
-		for (size_t ix = 0; ix != 0x10000; ++ix)
-			opcode_dispatch[ix] = nullptr;
-
 		uint16_t *permutation_buffer = new uint16_t[0x10000];
 		for (size_t ix = 0; ix != sizeof(opcode_sources) / sizeof(opcode_sources[0]); ++ix)
 		{
