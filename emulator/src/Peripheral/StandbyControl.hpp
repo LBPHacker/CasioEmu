@@ -16,6 +16,7 @@ namespace casioemu
 		using Peripheral::Peripheral;
 
 		void Initialise();
+		void Reset();
 	};
 }
 

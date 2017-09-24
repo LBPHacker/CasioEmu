@@ -66,8 +66,6 @@ namespace casioemu
 
 	void Screen::Frame()
 	{
-		// * TODO: consider screen_range
-
 		int ink_alpha_on = 20 + screen_contrast * 16;
 		if (ink_alpha_on > 255)
 			ink_alpha_on = 255;

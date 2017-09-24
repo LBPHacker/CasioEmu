@@ -11,30 +11,39 @@ namespace casioemu
 	{
 		interrupt_source.Setup(9, emulator);
 
-		region_timeout.Setup(0xF020, 2, "Timer/Timeout", &data_timeout, MMURegion::DefaultRead<uint16_t>, MMURegion::DefaultWrite<uint16_t>, emulator);
-		region_F022.Setup(0xF022, 2, "Timer/Unknown/F022*2", &data_F022, MMURegion::DefaultRead<uint16_t>, MMURegion::DefaultWrite<uint16_t>, emulator);
-		region_F024.Setup(0xF024, 1, "Timer/Unknown/F024*1", &data_F024, MMURegion::DefaultRead<uint8_t>, MMURegion::DefaultWrite<uint8_t>, emulator);
-
-		region_control.Setup(0xF025, 1, "Timer/Control", this, [](MMURegion *region, size_t offset) {
-			Timer *self = (Timer *)(region->userdata);
-			return self->data_control;
-		}, [](MMURegion *region, size_t offset, uint8_t data) {
-			Timer *self = (Timer *)(region->userdata);
-			self->data_control = data;
-			if (data & 0x01)
-			{
-				self->int_ticks_left = self->data_timeout + 1;
-				self->counting_request = true;
-			}
+		region_interval.Setup(0xF020, 2, "Timer/Interval", &data_interval, MMURegion::DefaultRead<uint16_t>, [](MMURegion *region, size_t offset, uint8_t data) {
+			uint16_t *value = (uint16_t *)(region->userdata);
+			*value &= ~(((uint16_t)0xFF) << ((offset - region->base) * 8));
+			*value |= ((uint16_t)data) << ((offset - region->base) * 8);
+			if (!*value)
+				*value = 1;
 		}, emulator);
 
-		counting = false;
-		counting_request = false;
+		region_counter.Setup(0xF022, 2, "Timer/Counter", &data_counter, MMURegion::DefaultRead<uint16_t>, [](MMURegion *region, size_t offset, uint8_t data) {
+			*((uint16_t *)region->userdata) = 0;
+		}, emulator);
 
+		region_control.Setup(0xF025, 1, "Timer/Control", this, [](MMURegion *region, size_t offset) {
+			Timer *timer = (Timer *)region->userdata;
+			return (uint8_t)(timer->data_control & 0x01);
+		}, [](MMURegion *region, size_t offset, uint8_t data) {
+			Timer *timer = (Timer *)region->userdata;
+			timer->data_control = data & 0x01;
+			timer->raise_required = false;
+		}, emulator);
+
+		region_F024.Setup(0xF024, 1, "Timer/Unknown/F024*1", &data_F024, MMURegion::DefaultRead<uint8_t>, MMURegion::DefaultWrite<uint8_t>, emulator);
+	}
+
+	void Timer::Reset()
+	{
 		ext_to_int_counter = 0;
 		ext_to_int_next = 0;
 		ext_to_int_int_done = 0;
 		DivideTicks();
+
+		raise_required = false;
+		data_control = 0;
 	}
 
 	void Timer::Tick()
@@ -43,14 +52,14 @@ namespace casioemu
 			DivideTicks();
 		++ext_to_int_counter;
 
-		if (counting && !int_ticks_left)
+		if (raise_required)
 			interrupt_source.TryRaise();
 	}
 
 	void Timer::TickAfterInterrupts()
 	{
-		if (counting && !int_ticks_left && interrupt_source.Success())
-			counting = false;
+		if (raise_required && interrupt_source.Success())
+			raise_required = false;
 	}
 
 	void Timer::DivideTicks()
@@ -63,13 +72,15 @@ namespace casioemu
 		}
 		ext_to_int_next = emulator.GetCyclesPerSecond() * (ext_to_int_int_done + 1) / ext_to_int_frequency;
 
-		if (counting && int_ticks_left)
-			--int_ticks_left;
-
-		if (!counting && counting_request)
+		if (data_control & 0x01)
 		{
-			counting = true;
-			counting_request = false;
+			if (data_counter == data_interval)
+			{
+				data_counter = 0;
+				if (interrupt_source.Enabled())
+					raise_required = true;
+			}
+			++data_counter;
 		}
 	}
 }

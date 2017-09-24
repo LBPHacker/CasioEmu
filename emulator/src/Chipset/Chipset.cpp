@@ -43,10 +43,8 @@ namespace casioemu
 	void Chipset::ConstructInterruptSFR()
 	{
 		region_int_mask.Setup(0xF010, 2, "Chipset/InterruptMask", &data_int_mask, MMURegion::DefaultRead<uint16_t, interrupt_bitfield_mask>, MMURegion::DefaultWrite<uint16_t, interrupt_bitfield_mask>, emulator);
-		data_int_mask = 0;
 
 		region_int_pending.Setup(0xF014, 2, "Chipset/InterruptPending", &data_int_pending, MMURegion::DefaultRead<uint16_t, interrupt_bitfield_mask>, MMURegion::DefaultWrite<uint16_t, interrupt_bitfield_mask>, emulator);
-		data_int_pending = 0;
 	}
 
 	void Chipset::DestructInterruptSFR()
@@ -57,7 +55,6 @@ namespace casioemu
 
 	void Chipset::ConstructPeripherals()
 	{
-		// * TODO: Add more peripherals here.
 		peripherals.push_front(new ROMWindow(emulator));
 		peripherals.push_front(new BatteryBackedRAM(emulator));
 		peripherals.push_front(new Screen(emulator));
@@ -94,6 +91,12 @@ namespace casioemu
 
 	void Chipset::Reset()
 	{
+		data_int_mask = 0;
+		data_int_pending = 0;
+
+		for (auto &peripheral : peripherals)
+			peripheral->Reset();
+
 		cpu.Reset();
 
 		interrupts_active[INT_RESET] = true;
@@ -174,7 +177,7 @@ namespace casioemu
 			for (size_t ix = INT_SOFTWARE; ix != INT_COUNT; ++ix)
 				if (interrupts_active[ix])
 				{
-					if (old_exception_level > 1) // * TODO: figure out how to handle this
+					if (old_exception_level > 1)
 						PANIC("software interrupt while exception level was greater than 1\n");
 					index = ix;
 					break;
@@ -252,17 +255,6 @@ namespace casioemu
 	void Chipset::SetInterruptPendingSFR(size_t index)
 	{
 		data_int_pending |= (1 << (index - managed_interrupt_base));
-	}
-
-	bool Chipset::TryRaiseMaskable(size_t index)
-	{
-		if (!InterruptEnabledBySFR(index))
-			return false;
-		if (GetInterruptPendingSFR(index))
-			return false;
-
-		RaiseMaskable(index);
-		return true;
 	}
 
 	void Chipset::Frame()

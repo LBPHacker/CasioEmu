@@ -102,18 +102,22 @@ namespace casioemu
 
 			lua_pop(emulator.lua_state, 2);
 		}
+	}
 
+	void Keyboard::Reset()
+	{
 		p0 = false;
 		p1 = false;
 		p146 = false;
 		keyboard_out = 0;
 		keyboard_out_mask = 0;
+
 		RecalculateGhost();
 	}
 
 	void Keyboard::Tick()
 	{
-		if (has_input)
+		if (has_input && interrupt_source.Enabled())
 			interrupt_source.TryRaise();
 	}
 

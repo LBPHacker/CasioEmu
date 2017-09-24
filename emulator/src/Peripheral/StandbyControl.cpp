@@ -32,7 +32,10 @@ namespace casioemu
 				return;
 			}
 		}, emulator);
+	}
 
+	void StandbyControl::Reset()
+	{
 		stpacp_last = 0;
 		stop_acceptor_enabled = false;
 	}

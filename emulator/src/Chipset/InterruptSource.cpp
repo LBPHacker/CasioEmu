@@ -21,12 +21,29 @@ namespace casioemu
 		setup_done = true;
 	}
 
+	bool InterruptSource::Enabled()
+	{
+		if (!setup_done)
+			PANIC("Setup not invoked\n");
+
+		return emulator->chipset.InterruptEnabledBySFR(interrupt_index);
+	}
+
 	bool InterruptSource::TryRaise()
 	{
 		if (!setup_done)
 			PANIC("Setup not invoked\n");
 
-		raise_success = emulator->chipset.TryRaiseMaskable(interrupt_index);
+		if (!emulator->chipset.InterruptEnabledBySFR(interrupt_index) || emulator->chipset.GetInterruptPendingSFR(interrupt_index))
+		{
+			raise_success = false;
+		}
+		else
+		{
+			emulator->chipset.RaiseMaskable(interrupt_index);
+			raise_success = true;
+		}
+
 		return raise_success;
 	}
 

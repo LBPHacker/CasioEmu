@@ -20,6 +20,7 @@ namespace casioemu
 		virtual void TickAfterInterrupts();
 		virtual void Frame();
 		virtual void UIEvent(SDL_Event &event);
+		virtual void Reset();
 		virtual ~Peripheral();
 	};
 }

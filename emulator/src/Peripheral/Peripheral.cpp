@@ -33,5 +33,9 @@ namespace casioemu
 	void Peripheral::UIEvent(SDL_Event &event)
 	{
 	}
+
+	void Peripheral::Reset()
+	{
+	}
 }
 
