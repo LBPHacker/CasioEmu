@@ -291,5 +291,7 @@ namespace casioemu
 		if (had_effect)
 			RecalculateGhost();
 	}
+
+	// * TODO: map computer keyboard keys to virtual buttons
 }
 

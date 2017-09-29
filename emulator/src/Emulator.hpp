@@ -59,10 +59,11 @@ namespace casioemu
 		 */
 		struct Cycles
 		{
-			Cycles(Uint64 cycles_per_second);
+			Cycles(Uint64 cycles_per_second, unsigned int timer_interval);
 			void Reset();
 			Uint64 GetDelta();
-			Uint64 ticks_at_reset, cycles_emulated, cycles_per_second, performance_frequency;
+			Uint64 ticks_at_reset, cycles_emulated, cycles_per_second, performance_frequency, diff_cap;
+			unsigned int timer_interval;
 		} cycles;
 
 	public:

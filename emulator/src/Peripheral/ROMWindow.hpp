@@ -9,6 +9,7 @@ namespace casioemu
 	class ROMWindow : public Peripheral
 	{
 		MMURegion region_0, region_1, region_8;
+		bool strict_memory;
 
 	public:
 		using Peripheral::Peripheral;

@@ -10,7 +10,7 @@
 
 namespace casioemu
 {
-	Emulator::Emulator(std::map<std::string, std::string> &_argv_map, unsigned int _timer_interval, unsigned int _cycles_per_second, bool _paused) : paused(_paused), argv_map(_argv_map), cycles(_cycles_per_second), chipset(*new Chipset(*this))
+	Emulator::Emulator(std::map<std::string, std::string> &_argv_map, unsigned int _timer_interval, unsigned int _cycles_per_second, bool _paused) : paused(_paused), argv_map(_argv_map), cycles(_cycles_per_second, _timer_interval), chipset(*new Chipset(*this))
 	{
 		std::lock_guard<std::mutex> access_lock(access_mx);
 		running = true;
@@ -295,9 +295,11 @@ namespace casioemu
 		paused = _paused;
 	}
 
-	Emulator::Cycles::Cycles(Uint64 _cycles_per_second)
+	Emulator::Cycles::Cycles(Uint64 _cycles_per_second, unsigned int _timer_interval)
 	{
 		cycles_per_second = _cycles_per_second;
+		timer_interval = _timer_interval;
+		diff_cap = cycles_per_second * timer_interval / 1000;
 		performance_frequency = SDL_GetPerformanceFrequency();
 	}
 
@@ -312,6 +314,8 @@ namespace casioemu
 		Uint64 ticks_now = SDL_GetPerformanceCounter();
 		Uint64 cycles_to_have_been_emulated_by_now = (double)(ticks_now - ticks_at_reset) / performance_frequency * cycles_per_second;
 		Uint64 diff = cycles_to_have_been_emulated_by_now - cycles_emulated;
+		if (diff > diff_cap)
+			diff = diff_cap;
 		cycles_emulated = cycles_to_have_been_emulated_by_now;
 		return diff;
 	}

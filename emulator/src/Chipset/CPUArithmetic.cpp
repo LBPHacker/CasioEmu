@@ -10,6 +10,7 @@ namespace casioemu
 	void CPU::OP_ADD()
 	{
 		impl_flags_in &= ~PSW_C;
+		impl_flags_in |= PSW_Z;
 		OP_ADDC();
 	}
 
@@ -39,6 +40,8 @@ namespace casioemu
 	void CPU::OP_ADDC()
 	{
 		Add8();
+		if (!(impl_flags_in & PSW_Z))
+			impl_flags_out &= ~PSW_Z;
 		ZSCheck();
 	}
 
@@ -108,6 +111,7 @@ namespace casioemu
 	void CPU::OP_SUB()
 	{
 		impl_flags_in &= ~PSW_C;
+		impl_flags_in |= PSW_Z;
 		OP_SUBC();
 	}
 
@@ -116,6 +120,8 @@ namespace casioemu
 		impl_operands[0].value ^= 0xFF;
 		Add8();
 		impl_operands[0].value ^= 0xFF;
+		if (!(impl_flags_in & PSW_Z))
+			impl_flags_out &= ~PSW_Z;
 		ZSCheck();
 	}
 
@@ -160,19 +166,24 @@ namespace casioemu
 	void CPU::OP_DAA()
 	{
 		impl_operands[1].value = 0;
-		if ((impl_operands[0].value & 0x0F) > 0x09 || (impl_flags_in & PSW_HC)) impl_operands[1].value += 0x06;
-		if ((impl_operands[0].value & 0xF0) > 0x90 || (impl_flags_in &  PSW_C)) impl_operands[1].value += 0x60;
+		if ((impl_operands[0].value & 0x0F) > 0x09 || (impl_flags_in & PSW_HC)) impl_operands[1].value |= 0x06;
+		if ((impl_operands[0].value & 0xF0) > 0x90 || (impl_flags_in &  PSW_C)) impl_operands[1].value |= 0x60;
+		if ((impl_operands[0].value & 0xF0) == 0x90 && (impl_operands[0].value & 0x0F) > 0x09 && !(impl_flags_in & PSW_HC)) impl_operands[1].value |= 0x60;
+		uint8_t flags_in_backup = impl_flags_in;
 		OP_ADD();
-		impl_flags_out &= ~PSW_OV;
+		impl_flags_out |= flags_in_backup & PSW_C;
+		impl_flags_changed &= ~PSW_OV;
 	}
 
 	void CPU::OP_DAS()
 	{
 		impl_operands[1].value = 0;
-		if ((impl_operands[0].value & 0x0F) > 0x09 || (impl_flags_in & PSW_HC)) impl_operands[1].value += 0x06;
-		if ((impl_operands[0].value & 0xF0) > 0x90 || (impl_flags_in &  PSW_C)) impl_operands[1].value += 0x60;
+		if ((impl_operands[0].value & 0x0F) > 0x09 || (impl_flags_in & PSW_HC)) impl_operands[1].value |= 0x06;
+		if ((impl_operands[0].value & 0xF0) > 0x90 || (impl_flags_in &  PSW_C)) impl_operands[1].value |= 0x60;
+		uint8_t flags_in_backup = impl_flags_in;
 		OP_SUB();
-		impl_flags_out &= ~PSW_OV;
+		impl_flags_out |= flags_in_backup & PSW_C;
+		impl_flags_changed &= ~PSW_OV;
 	}
 
 	void CPU::OP_NEG()
