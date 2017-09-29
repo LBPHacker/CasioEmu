@@ -244,6 +244,8 @@ namespace casioemu
 	{
 		SetupOpcodeDispatch();
 		SetupRegisterProxies();
+
+		impl_csr_mask = emulator.GetModelInfo("csr_mask");
 	}
 
 	void CPU::SetupOpcodeDispatch()
@@ -348,13 +350,15 @@ namespace casioemu
 
 	uint16_t CPU::Fetch()
 	{
-		if (reg_csr.raw >= 0x10)
-			PANIC("wtf\n");
-
-		if (reg_pc & 1)
+		if (reg_csr.raw & ~impl_csr_mask)
+		{
+			logger::Info("warning: CSR masked bits set\n");
+			reg_csr.raw &= impl_csr_mask;
+		}
+		if (reg_pc.raw & 1)
 		{
 			logger::Info("warning: PC LSB set\n");
-			reg_pc &= ~1;
+			reg_pc.raw &= ~1;
 		}
 		uint16_t opcode = emulator.chipset.mmu.ReadCode((reg_csr.raw << 16) | reg_pc.raw);
 		reg_pc.raw = (uint16_t)(reg_pc.raw + 2);

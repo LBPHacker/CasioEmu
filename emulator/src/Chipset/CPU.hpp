@@ -85,6 +85,7 @@ namespace casioemu
 			size_t register_index, register_size;
 		} impl_operands[2];
 		size_t impl_hint;
+		uint16_t impl_csr_mask;
 
 		void SetupOpcodeDispatch();
 		void SetupRegisterProxies();

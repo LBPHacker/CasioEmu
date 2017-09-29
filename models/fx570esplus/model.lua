@@ -31,6 +31,7 @@ do
 		model_name = "fx-570ES PLUS",
 		interface_image_path = "interface.png",
 		rom_path = "rom.bin",
+		csr_mask = 0x0001,
 		rsd_interface = {0, 0, 410, 810, 0, 0},
 		rsd_pixel = {410, 252,  3,  3,  61, 141},
 		rsd_s     = {410,   0, 10, 14,  61, 127},
