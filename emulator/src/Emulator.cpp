@@ -229,7 +229,7 @@ namespace casioemu
 				lua_pop(lua_state, 1);
 				luaL_unref(lua_state, LUA_REGISTRYINDEX, lua_pre_tick_ref);
 				lua_pre_tick_ref = LUA_REFNIL;
-				logger::Info("  pre-tick hook unregistered\n", lua_tostring(lua_state, -1));
+				logger::Info("  pre-tick hook unregistered\n");
 			}
 		}
 
@@ -244,7 +244,7 @@ namespace casioemu
 				lua_pop(lua_state, 1);
 				luaL_unref(lua_state, LUA_REGISTRYINDEX, lua_post_tick_ref);
 				lua_post_tick_ref = LUA_REFNIL;
-				logger::Info("  post-tick hook unregistered\n", lua_tostring(lua_state, -1));
+				logger::Info("  post-tick hook unregistered\n");
 			}
 		}
 	}
