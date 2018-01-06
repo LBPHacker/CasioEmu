@@ -49,6 +49,7 @@ namespace casioemu
 		cycles.Reset();
 
 		timer_id = SDL_AddTimer(timer_interval, [](Uint32 delay, void *param) {
+			(void)delay;
 			Emulator *emulator = (Emulator *)param;
 			emulator->TimerCallback();
 			return (Uint32)emulator->timer_interval;
@@ -162,6 +163,7 @@ namespace casioemu
 		lua_setfield(lua_state, -2, "post_tick");
 		lua_setfield(lua_state, -2, "__index");
 		lua_pushcfunction(lua_state, [](lua_State *lua_state) {
+			(void)lua_state;
 			return 0;
 		});
 		lua_setfield(lua_state, -2, "__newindex");
@@ -268,6 +270,7 @@ namespace casioemu
 	{
 		const char *ugly_string_data_ptr = command.c_str();
 		if (lua_load(lua_state, [](lua_State *lua_state, void *data, size_t *size) {
+			(void)lua_state;
 			char **ugly_string_data_ptr_ptr = (char **)data;
 			if (!*ugly_string_data_ptr_ptr)
 				return (const char *)nullptr;
@@ -335,4 +338,3 @@ namespace casioemu
 		return cycles.cycles_per_second;
 	}
 }
-

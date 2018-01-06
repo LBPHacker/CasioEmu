@@ -20,13 +20,17 @@ namespace casioemu
 		}, emulator);
 
 		region_counter.Setup(0xF022, 2, "Timer/Counter", &data_counter, MMURegion::DefaultRead<uint16_t>, [](MMURegion *region, size_t offset, uint8_t data) {
+			(void)offset;
+			(void)data;
 			*((uint16_t *)region->userdata) = 0;
 		}, emulator);
 
 		region_control.Setup(0xF025, 1, "Timer/Control", this, [](MMURegion *region, size_t offset) {
+			(void)offset;
 			Timer *timer = (Timer *)region->userdata;
 			return (uint8_t)(timer->data_control & 0x01);
 		}, [](MMURegion *region, size_t offset, uint8_t data) {
+			(void)offset;
 			Timer *timer = (Timer *)region->userdata;
 			timer->data_control = data & 0x01;
 			timer->raise_required = false;
@@ -84,4 +88,3 @@ namespace casioemu
 		}
 	}
 }
-

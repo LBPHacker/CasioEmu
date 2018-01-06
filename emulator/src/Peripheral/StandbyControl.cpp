@@ -10,6 +10,7 @@ namespace casioemu
 	void StandbyControl::Initialise()
 	{
 		region_stpacp.Setup(0xF008, 1, "StandbyControl/STPACP", this, MMURegion::IgnoreRead<0x00>, [](MMURegion *region, size_t offset, uint8_t data) {
+			(void)offset;
 			StandbyControl *self = (StandbyControl *)(region->userdata);
 			if ((data & 0xF0) == 0xA0 && (self->stpacp_last & 0xF0) == 0x50)
 				self->stop_acceptor_enabled = true;
@@ -17,6 +18,7 @@ namespace casioemu
 		}, emulator);
 
 		region_sbycon.Setup(0xF009, 1, "StandbyControl/SBYCON", this, MMURegion::IgnoreRead<0x00>, [](MMURegion *region, size_t offset, uint8_t data) {
+			(void)offset;
 			StandbyControl *self = (StandbyControl *)(region->userdata);
 
 			if (data & 0x01)
@@ -40,4 +42,3 @@ namespace casioemu
 		stop_acceptor_enabled = false;
 	}
 }
-

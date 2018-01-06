@@ -32,10 +32,10 @@ namespace casioemu
 
 	void Peripheral::UIEvent(SDL_Event &event)
 	{
+		(void)event;
 	}
 
 	void Peripheral::Reset()
 	{
 	}
 }
-

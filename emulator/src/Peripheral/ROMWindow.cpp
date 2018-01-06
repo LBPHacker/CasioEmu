@@ -59,6 +59,6 @@ namespace casioemu
 
 	void ROMWindow::UIEvent(SDL_Event &event)
 	{
+		(void)event;
 	}
 }
-

@@ -31,11 +31,16 @@ namespace casioemu
 		template<uint8_t read_value>
 		static uint8_t IgnoreRead(MMURegion *region, size_t offset)
 		{
+			(void)region;
+			(void)offset;
 			return read_value;
 		}
 
 		static void IgnoreWrite(MMURegion *region, size_t offset, uint8_t data)
 		{
+			(void)region;
+			(void)offset;
+			(void)data;
 		}
 
 		template<typename value_type, value_type mask = (value_type)-1>
@@ -73,4 +78,3 @@ namespace casioemu
 		}
 	};
 }
-

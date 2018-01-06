@@ -10,8 +10,10 @@ namespace casioemu
 	void Miscellaneous::Initialise()
 	{
 		region_dsr.Setup(0xF000, 1, "Miscellaneous/DSR", this, [](MMURegion *region, size_t offset) {
+			(void)offset;
 			return (uint8_t)((Miscellaneous *)region->userdata)->emulator.chipset.cpu.reg_dsr;
 		}, [](MMURegion *region, size_t offset, uint8_t data) {
+			(void)offset;
 			((Miscellaneous *)region->userdata)->emulator.chipset.cpu.reg_dsr = data;
 		}, emulator);
 
@@ -25,4 +27,3 @@ namespace casioemu
 		region_F220.Setup(0xF220, 4, "Miscellaneous/Unknown/F220*4", &data_F220, MMURegion::DefaultRead<uint32_t>, MMURegion::DefaultWrite<uint32_t>, emulator);
 	}
 }
-
