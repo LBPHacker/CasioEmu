@@ -100,7 +100,6 @@ int main(int argc, char *argv[])
 				case CE_EVENT_INPUT:
 					{
 						std::lock_guard<std::mutex> input_lock(input_mx);
-						std::lock_guard<std::mutex> access_lock(emulator.access_mx);
 						emulator.ExecuteCommand(console_input_str);
 						input_processed = true;
 					}
@@ -108,7 +107,6 @@ int main(int argc, char *argv[])
 					break;
 
 				case CE_FRAME_REQUEST:
-					std::lock_guard<std::mutex> access_lock(emulator.access_mx);
 					emulator.Frame();
 					break;
 				}
@@ -118,7 +116,6 @@ int main(int argc, char *argv[])
 				switch (event.window.event)
 				{
 				case SDL_WINDOWEVENT_CLOSE:
-					std::lock_guard<std::mutex> access_lock(emulator.access_mx);
 					emulator.Shutdown();
 					break;
 				}
@@ -126,10 +123,7 @@ int main(int argc, char *argv[])
 
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
-				{
-					std::lock_guard<std::mutex> access_lock(emulator.access_mx);
-					emulator.UIEvent(event);
-				}
+				emulator.UIEvent(event);
 				break;
 			}
 		}
@@ -142,4 +136,3 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
-
