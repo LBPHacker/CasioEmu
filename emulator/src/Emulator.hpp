@@ -7,6 +7,7 @@
 #include <SDL2/SDL_image.h>
 #include <lua5.3/lua.hpp>
 #include <mutex>
+#include <thread>
 
 #include "Data/ModelInfo.hpp"
 #include "Data/SpriteInfo.hpp"
@@ -22,12 +23,13 @@ namespace casioemu
 		SDL_Window *window;
 		SDL_Renderer *renderer;
 		SDL_Texture *interface_texture;
-		SDL_TimerID timer_id;
 		unsigned int timer_interval;
 		bool running, paused;
 		unsigned int last_frame_tick_count;
 		std::string model_path;
 		bool pause_on_mem_error;
+
+		std::thread *tick_thread;
 
 		SpriteInfo interface_background;
 
@@ -44,7 +46,7 @@ namespace casioemu
 		Emulator(std::map<std::string, std::string> &argv_map, unsigned int timer_interval, unsigned int cycles_per_second, bool paused = false);
 		~Emulator();
 
-		std::mutex access_mx;
+		std::recursive_mutex access_mx;
 		lua_State *lua_state;
 		int lua_model_ref, lua_pre_tick_ref, lua_post_tick_ref;
 		std::map<std::string, std::string> &argv_map;
@@ -94,4 +96,3 @@ namespace casioemu
 		friend class MMU;
 	};
 }
-

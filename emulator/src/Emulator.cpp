@@ -7,12 +7,14 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <chrono>
 
 namespace casioemu
 {
 	Emulator::Emulator(std::map<std::string, std::string> &_argv_map, unsigned int _timer_interval, unsigned int _cycles_per_second, bool _paused) : paused(_paused), argv_map(_argv_map), cycles(_cycles_per_second, _timer_interval), chipset(*new Chipset(*this))
 	{
-		std::lock_guard<std::mutex> access_lock(access_mx);
+		std::lock_guard<std::recursive_mutex> access_lock(access_mx);
+
 		running = true;
 		timer_interval = _timer_interval;
 		model_path = argv_map["model"];
@@ -48,12 +50,19 @@ namespace casioemu
 		SetupInternals();
 		cycles.Reset();
 
-		timer_id = SDL_AddTimer(timer_interval, [](Uint32 delay, void *param) {
-			(void)delay;
-			Emulator *emulator = (Emulator *)param;
-			emulator->TimerCallback();
-			return (Uint32)emulator->timer_interval;
-		}, this);
+		tick_thread = new std::thread([this] {
+			while (1)
+			{
+				{
+					std::lock_guard<std::recursive_mutex> access_lock(access_mx);
+					if (!Running())
+						break;
+					TimerCallback();
+				}
+
+				std::this_thread::sleep_for(std::chrono::milliseconds(timer_interval));
+			}
+		});
 
 		RunStartupScript();
 
@@ -67,8 +76,11 @@ namespace casioemu
 
 	Emulator::~Emulator()
 	{
-		std::lock_guard<std::mutex> access_lock(access_mx);
-		SDL_RemoveTimer(timer_id);
+		if (tick_thread->joinable())
+			tick_thread->join();
+		delete tick_thread;
+		
+		std::lock_guard<std::recursive_mutex> access_lock(access_mx);
 
 		SDL_DestroyTexture(interface_texture);
 		SDL_DestroyRenderer(renderer);
@@ -90,6 +102,8 @@ namespace casioemu
 
 	void Emulator::UIEvent(SDL_Event &event)
 	{
+		std::lock_guard<std::recursive_mutex> access_lock(access_mx);
+
 		chipset.UIEvent(event);
 	}
 
@@ -195,9 +209,9 @@ namespace casioemu
 
 	void Emulator::TimerCallback()
 	{
-		std::lock_guard<std::mutex> access_lock(access_mx);
-		Uint64 cycles_to_emulate = cycles.GetDelta();
+		std::lock_guard<std::recursive_mutex> access_lock(access_mx);
 
+		Uint64 cycles_to_emulate = cycles.GetDelta();
 		for (Uint64 ix = 0; ix != cycles_to_emulate; ++ix)
 			if (!paused)
 				Tick();
@@ -211,6 +225,8 @@ namespace casioemu
 
 	void Emulator::Frame()
 	{
+		std::lock_guard<std::recursive_mutex> access_lock(access_mx);
+
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 		SDL_RenderClear(renderer);
 		SDL_SetTextureColorMod(interface_texture, 255, 255, 255);
@@ -263,11 +279,15 @@ namespace casioemu
 
 	void Emulator::Shutdown()
 	{
+		std::lock_guard<std::recursive_mutex> access_lock(access_mx);
+
 		running = false;
 	}
 
 	void Emulator::ExecuteCommand(std::string command)
 	{
+		std::lock_guard<std::recursive_mutex> access_lock(access_mx);
+
 		const char *ugly_string_data_ptr = command.c_str();
 		if (lua_load(lua_state, [](lua_State *lua_state, void *data, size_t *size) {
 			(void)lua_state;
