@@ -123,6 +123,8 @@ int main(int argc, char *argv[])
 
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
+			case SDL_KEYDOWN:
+			case SDL_KEYUP:
 				emulator.UIEvent(event);
 				break;
 			}

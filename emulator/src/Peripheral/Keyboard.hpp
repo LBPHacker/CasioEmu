@@ -5,6 +5,8 @@
 #include "../Chipset/MMURegion.hpp"
 #include "../Chipset/InterruptSource.hpp"
 
+#include <unordered_map>
+
 namespace casioemu
 {
 	class Keyboard : public Peripheral
@@ -31,6 +33,9 @@ namespace casioemu
 			bool pressed, stuck;
 		} buttons[64];
 
+		// Maps from keycode to an index to (buttons).
+		std::unordered_map<SDL_Keycode, size_t> keyboard_map;
+
 		bool p0, p1, p146;
 
 	public:
@@ -41,6 +46,7 @@ namespace casioemu
 		void Tick();
 		void Frame();
 		void UIEvent(SDL_Event &event);
+		void PressButton(Button& button, bool stick);
 		void PressAt(int x, int y, bool stick);
 		void ReleaseAll();
 		void RecalculateKI();
