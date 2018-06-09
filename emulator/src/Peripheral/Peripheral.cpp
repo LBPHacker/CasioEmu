@@ -31,9 +31,8 @@ namespace casioemu
 		require_frame = false;
 	}
 
-	void Peripheral::UIEvent(SDL_Event &event)
+	void Peripheral::UIEvent(SDL_Event &)
 	{
-		(void)event;
 	}
 
 	void Peripheral::Reset()

@@ -39,8 +39,7 @@ namespace casioemu
 			return 1;
 		});
 		lua_setfield(emulator.lua_state, -2, "__index");
-		lua_pushcfunction(emulator.lua_state, [](lua_State *lua_state) {
-			(void)lua_state;
+		lua_pushcfunction(emulator.lua_state, [](lua_State *) {
 			return 0;
 		});
 		lua_setfield(emulator.lua_state, -2, "__newindex");

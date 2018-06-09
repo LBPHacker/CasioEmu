@@ -176,8 +176,7 @@ namespace casioemu
 		});
 		lua_setfield(lua_state, -2, "post_tick");
 		lua_setfield(lua_state, -2, "__index");
-		lua_pushcfunction(lua_state, [](lua_State *lua_state) {
-			(void)lua_state;
+		lua_pushcfunction(lua_state, [](lua_State *) {
 			return 0;
 		});
 		lua_setfield(lua_state, -2, "__newindex");
@@ -291,8 +290,7 @@ namespace casioemu
 		std::lock_guard<std::recursive_mutex> access_lock(access_mx);
 
 		const char *ugly_string_data_ptr = command.c_str();
-		if (lua_load(lua_state, [](lua_State *lua_state, void *data, size_t *size) {
-			(void)lua_state;
+		if (lua_load(lua_state, [](lua_State *, void *data, size_t *size) {
 			char **ugly_string_data_ptr_ptr = (char **)data;
 			if (!*ugly_string_data_ptr_ptr)
 				return (const char *)nullptr;
