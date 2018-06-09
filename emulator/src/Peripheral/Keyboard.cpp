@@ -216,6 +216,8 @@ namespace casioemu
 		else
 			button.pressed = true;
 
+		require_frame = true;
+
 		if (button.type == Button::BT_POWER && button.pressed && !old_pressed)
 			emulator.chipset.Reset();
 		if (button.type == Button::BT_BUTTON && button.pressed != old_pressed)
@@ -228,7 +230,6 @@ namespace casioemu
 		{
 			if (button.rect.x <= x && button.rect.y <= y && button.rect.x + button.rect.w > x && button.rect.y + button.rect.h > y)
 			{
-				require_frame = true;
 				PressButton(button, stick);
 				break;
 			}
