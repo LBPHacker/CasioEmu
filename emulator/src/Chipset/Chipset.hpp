@@ -71,7 +71,7 @@ namespace casioemu
 		/**
 		 * This exists because the Emulator that owns this Chipset is not ready
 		 * to supply a ROM path upon construction. It has to call `LoadROM` later
-		 * in its contstructor.
+		 * in its constructor.
 		 */
 		void SetupInternals();
 
@@ -90,6 +90,7 @@ namespace casioemu
 		bool GetInterruptPendingSFR(size_t index);
 
 		void Tick();
+		bool GetRequireFrame();
 		void Frame();
 		void UIEvent(SDL_Event &event);
 

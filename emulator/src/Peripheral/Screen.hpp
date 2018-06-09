@@ -48,6 +48,38 @@ namespace casioemu
 		static SpriteBitmap sprite_bitmap[];
 		SpriteInfo sprite_info[SPR_MAX];
 
+		/**
+		 * Similar to MMURegion::DefaultWrite, except this also set the
+		 * (require_frame) flag of (Peripheral) class.
+		 * If (only_on_change) is true, (require_frame) is not set if the new value
+		 * is the same as the old value.
+		 * (region->userdata) should be a pointer to a (Screen) instance.
+		 *
+		 * TODO: Probably this should be a member of Peripheral class instead.
+		 * (in that case (Screen) class needs to be parameterized)
+		 */
+		template<typename value_type, value_type mask = (value_type)-1,
+			value_type Screen:: *member_ptr, bool only_on_change = true>
+		static void SetRequireFrameWrite(MMURegion *region, size_t offset, uint8_t data)
+		{
+			auto this_obj = (Screen *)(region->userdata);
+			value_type &value = this_obj->*member_ptr;
+
+			value_type old_value;
+			if (only_on_change)
+				old_value = value;
+
+			// This part is identical to MMURegion::DefaultWrite.
+			// * TODO Try to avoid duplication?
+			value &= ~(((value_type)0xFF) << ((offset - region->base) * 8));
+			value |= ((value_type)data) << ((offset - region->base) * 8);
+			value &= mask;
+
+			if (only_on_change && old_value == value)
+				return;
+			this_obj->require_frame = true;
+		}
+
 	public:
 		using Peripheral::Peripheral;
 

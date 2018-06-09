@@ -40,23 +40,27 @@ namespace casioemu
 
 		screen_buffer = new uint8_t[0x0200];
 
-		region_buffer.Setup(0xF800, 0x0200, "Screen/Buffer", screen_buffer, [](MMURegion *region, size_t offset) {
+		region_buffer.Setup(0xF800, 0x0200, "Screen/Buffer", this, [](MMURegion *region, size_t offset) {
 			offset -= region->base;
 			if ((offset & 0x000F) >= 0x000C)
 				return (uint8_t)0;
-			return ((uint8_t *)region->userdata)[offset];
+			return ((Screen *)region->userdata)->screen_buffer[offset];
 		}, [](MMURegion *region, size_t offset, uint8_t data) {
 			offset -= region->base;
 			if ((offset & 0x000F) >= 0x000C)
 				return;
-			((uint8_t *)region->userdata)[offset] = data;
+
+			auto this_obj = (Screen *)region->userdata;
+			// * Set require_frame to true only if the value changed.
+			this_obj->require_frame |= this_obj->screen_buffer[offset] != data;
+			this_obj->screen_buffer[offset] = data;
 		}, emulator);
 
-		region_range.Setup(0xF030, 1, "Screen/Range", &screen_range, MMURegion::DefaultRead<uint8_t, 0x07>, MMURegion::DefaultWrite<uint8_t, 0x07>, emulator);
+		region_range.Setup(0xF030, 1, "Screen/Range", this, MMURegion::DefaultRead<uint8_t, 0x07>, SetRequireFrameWrite<uint8_t, 0x07, &Screen::screen_range>, emulator);
 
-		region_mode.Setup(0xF031, 1, "Screen/Mode", &screen_mode, MMURegion::DefaultRead<uint8_t, 0x07>, MMURegion::DefaultWrite<uint8_t, 0x07>, emulator);
+		region_mode.Setup(0xF031, 1, "Screen/Mode", this, MMURegion::DefaultRead<uint8_t, 0x07>, SetRequireFrameWrite<uint8_t, 0x07, &Screen::screen_mode>, emulator);
 
-		region_contrast.Setup(0xF032, 1, "Screen/Contrast", &screen_contrast, MMURegion::DefaultRead<uint8_t, 0x1F>, MMURegion::DefaultWrite<uint8_t, 0x1F>, emulator);
+		region_contrast.Setup(0xF032, 1, "Screen/Contrast", this, MMURegion::DefaultRead<uint8_t, 0x1F>, SetRequireFrameWrite<uint8_t, 0x1F, &Screen::screen_contrast>, emulator);
 	}
 
 	void Screen::Uninitialise()
@@ -66,6 +70,8 @@ namespace casioemu
 
 	void Screen::Frame()
 	{
+		require_frame = false;
+
 		int ink_alpha_on = 20 + screen_contrast * 16;
 		if (ink_alpha_on > 255)
 			ink_alpha_on = 255;
