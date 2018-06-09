@@ -6,6 +6,7 @@
 #include "../Chipset/Chipset.hpp"
 
 #include <lua5.3/lua.hpp>
+#include <SDL2/SDL.h>
 
 namespace casioemu
 {
@@ -64,6 +65,27 @@ namespace casioemu
 				if (lua_geti(emulator.lua_state, -1, ix + 1) != LUA_TTABLE)
 					PANIC("key '%s'[%zu] is not a table\n", key, ix + 1);
 
+				if (lua_geti(emulator.lua_state, -1, 6) != LUA_TSTRING)
+					PANIC("key '%s'[%zu][6] is not a string\n", key, ix + 1);
+
+				size_t button_name_len;
+				const char *button_name = lua_tolstring(emulator.lua_state, -1, &button_name_len);
+				if (strlen(button_name) != button_name_len)
+					PANIC("Key name '%.*s' contains null byte\n", (int) button_name_len, button_name);
+
+				SDL_Keycode button_key;
+				if (button_name_len == 0)
+				{
+					button_key = SDLK_UNKNOWN;
+				}
+				else
+				{
+					button_key = SDL_GetKeyFromName(button_name);
+					if (button_key == SDLK_UNKNOWN)
+						PANIC("Key name '%s' is invalid\n", button_name);
+				}
+				lua_pop(emulator.lua_state, 1); // Pop the key name
+
 				for (int kx = 0; kx != 5; ++kx)
 					if (lua_geti(emulator.lua_state, -1 - kx, kx + 1) != LUA_TNUMBER)
 						PANIC("key '%s'[%zu][%i] is not a number\n", key, ix + 1, kx + 1);
@@ -78,7 +100,14 @@ namespace casioemu
 				{
 					button_ix = ((code >> 1) & 0x38) | (code & 0x07);
 					if (button_ix >= 64)
-						PANIC("button index is doesn't fit 6 bits\n");
+						PANIC("button index doesn't fit 6 bits\n");
+				}
+
+				if (button_key != SDLK_UNKNOWN)
+				{
+					bool insert_success = keyboard_map.emplace(button_key, button_ix).second;
+					if (!insert_success)
+						PANIC("Key '%s' is used twice\n", button_name);
 				}
 
 				Button &button = buttons[button_ix];
@@ -160,7 +189,37 @@ namespace casioemu
 				break;
 			}
 			break;
+
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			SDL_Keycode keycode = event.key.keysym.sym;
+			auto iterator = keyboard_map.find(keycode);
+			if (iterator == keyboard_map.end())
+				break;
+			if (event.key.state == SDL_PRESSED)
+				PressButton(buttons[iterator->second], false);
+			else
+				ReleaseAll();
+			break;
 		}
+	}
+
+	void Keyboard::PressButton(Button& button, bool stick)
+	{
+		bool old_pressed = button.pressed;
+
+		if (stick)
+		{
+			button.stuck = !button.stuck;
+			button.pressed = button.stuck;
+		}
+		else
+			button.pressed = true;
+
+		if (button.type == Button::BT_POWER && button.pressed && !old_pressed)
+			emulator.chipset.Reset();
+		if (button.type == Button::BT_BUTTON && button.pressed != old_pressed)
+			RecalculateGhost();
 	}
 
 	void Keyboard::PressAt(int x, int y, bool stick)
@@ -169,23 +228,8 @@ namespace casioemu
 		{
 			if (button.rect.x <= x && button.rect.y <= y && button.rect.x + button.rect.w > x && button.rect.y + button.rect.h > y)
 			{
-				bool old_pressed = button.pressed;
-
-				if (stick)
-				{
-					button.stuck = !button.stuck;
-					button.pressed = button.stuck;
-				}
-				else
-					button.pressed = true;
-
 				require_frame = true;
-
-				if (button.type == Button::BT_POWER && button.pressed && !old_pressed)
-					emulator.chipset.Reset();
-				if (button.type == Button::BT_BUTTON && button.pressed != old_pressed)
-					RecalculateGhost();
-
+				PressButton(button, stick);
 				break;
 			}
 		}
@@ -299,7 +343,5 @@ namespace casioemu
 			RecalculateGhost();
 		}
 	}
-
-	// * TODO: map computer keyboard keys to virtual buttons
 }
 

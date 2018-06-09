@@ -1,31 +1,32 @@
 do
 	local buttons = {}
 	local function generate(px, py, w, h, nx, ny, sx, sy, code)
-		local cp = 0
+		local cp = 1
 		for iy = 0, ny - 1 do
 			for ix = 0, nx - 1 do
-				cp = cp + 1
-				table.insert(buttons, {px + ix * sx, py + iy * sy, w, h, code[cp]})
+				table.insert(buttons, {px + ix*sx, py + iy*sy, w, h, code[cp], code[cp+1]})
+				cp = cp + 2
 			end
 		end
 	end
+	-- Refer to https://wiki.libsdl.org/SDL_Keycode for key names.
 	generate(46, 544, 58, 41, 5, 4, 65, 57, {
-		0x02, 0x12, 0x22, 0x32, 0x42,
-		0x01, 0x11, 0x21, 0x31, 0x41,
-		0x00, 0x10, 0x20, 0x30, 0x40,
-		0x64, 0x63, 0x62, 0x61, 0x60
+		0x02, '7', 0x12, '8', 0x22, '9', 0x32, 'Backspace', 0x42, 'Space',
+		0x01, '4', 0x11, '5', 0x21, '6', 0x31, '' , 0x41, '/',
+		0x00, '1', 0x10, '2', 0x20, '3', 0x30, '=', 0x40, '-',
+		0x64, '0', 0x63, '.', 0x62, 'E', 0x61, '' , 0x60, 'Return',
 	})
 	generate(46, 406, 48, 31, 6, 3, 54, 46, {
-		0x05, 0x15, 0x25, 0x35, 0x45, 0x55,
-		0x04, 0x14, 0x24, 0x34, 0x44, 0x54,
-		0x03, 0x13, 0x23, 0x33, 0x43, 0x53
+		0x05, '', 0x15, '', 0x25, '', 0x35, '', 0x45, '', 0x55, '',
+		0x04, '', 0x14, '', 0x24, '', 0x34, '', 0x44, '', 0x54, '',
+		0x03, '', 0x13, '', 0x23, '', 0x33, '', 0x43, '', 0x53, '',
 	})
-	generate( 40, 359, 48, 31, 2, 1,  54,  0, {0x06, 0x16})
-	generate(268, 359, 48, 31, 2, 1,  54,  0, {0x46, 0x56})
-	generate( 44, 290, 49, 39, 2, 1, 273,  0, {0x07, 0xFF})
-	generate(100, 298, 48, 38, 2, 1, 162,  0, {0x17, 0x47})
-	generate(155, 319, 33, 32, 2, 1,  67,  0, {0x26, 0x37})
-	generate(188, 289, 34, 30, 1, 2,   0, 62, {0x27, 0x36})
+	generate( 40, 359, 48, 31, 2, 1,  54,  0, {0x06, 'F5', 0x16, 'F6',})
+	generate(268, 359, 48, 31, 2, 1,  54,  0, {0x46, 'F7', 0x56, 'F8',})
+	generate( 44, 290, 49, 39, 2, 1, 273,  0, {0x07, 'F1', 0xFF, 'F4',})
+	generate(100, 298, 48, 38, 2, 1, 162,  0, {0x17, 'F2', 0x47, 'F3',})
+	generate(155, 319, 33, 32, 2, 1,  67,  0, {0x26, 'Left', 0x37, 'Right',})
+	generate(188, 289, 34, 30, 1, 2,   0, 62, {0x27, 'Up', 0x36, 'Down',})
 
 	emu:model({
 		model_name = "fx-570ES PLUS",
