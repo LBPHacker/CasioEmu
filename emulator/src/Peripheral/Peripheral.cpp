@@ -2,7 +2,7 @@
 
 namespace casioemu
 {
-	Peripheral::Peripheral(Emulator &_emulator) : emulator(_emulator)
+	Peripheral::Peripheral(Emulator &_emulator) : emulator(_emulator), require_frame(false)
 	{
 	}
 
@@ -28,6 +28,7 @@ namespace casioemu
 
 	void Peripheral::Frame()
 	{
+		require_frame = false;
 	}
 
 	void Peripheral::UIEvent(SDL_Event &event)
@@ -37,5 +38,10 @@ namespace casioemu
 
 	void Peripheral::Reset()
 	{
+	}
+
+	bool Peripheral::GetRequireFrame()
+	{
+		return require_frame;
 	}
 }

@@ -90,6 +90,7 @@ namespace casioemu
 		bool GetInterruptPendingSFR(size_t index);
 
 		void Tick();
+		bool GetRequireFrame();
 		void Frame();
 		void UIEvent(SDL_Event &event);
 

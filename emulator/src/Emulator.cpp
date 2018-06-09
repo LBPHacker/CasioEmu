@@ -226,14 +226,16 @@ namespace casioemu
 	void Emulator::Frame()
 	{
 		std::lock_guard<std::recursive_mutex> access_lock(access_mx);
-
-		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-		SDL_RenderClear(renderer);
-		SDL_SetTextureColorMod(interface_texture, 255, 255, 255);
-		SDL_SetTextureAlphaMod(interface_texture, 255);
-		SDL_RenderCopy(renderer, interface_texture, &interface_background.src, &interface_background.dest);
-		chipset.Frame();
-		SDL_RenderPresent(renderer);
+		if (chipset.GetRequireFrame())
+		{
+			SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+			SDL_RenderClear(renderer);
+			SDL_SetTextureColorMod(interface_texture, 255, 255, 255);
+			SDL_SetTextureAlphaMod(interface_texture, 255);
+			SDL_RenderCopy(renderer, interface_texture, &interface_background.src, &interface_background.dest);
+			chipset.Frame();
+			SDL_RenderPresent(renderer);
+		}
 	}
 
 	void Emulator::Tick()

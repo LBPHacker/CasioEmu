@@ -14,6 +14,7 @@
 #include "../Peripheral/Timer.hpp"
 
 #include <fstream>
+#include <algorithm>
 
 namespace casioemu
 {
@@ -255,6 +256,13 @@ namespace casioemu
 	void Chipset::SetInterruptPendingSFR(size_t index)
 	{
 		data_int_pending |= (1 << (index - managed_interrupt_base));
+	}
+
+	bool Chipset::GetRequireFrame()
+	{
+		return std::any_of(peripherals.begin(), peripherals.end(), [](Peripheral *peripheral){
+			return peripheral->GetRequireFrame();
+		});
 	}
 
 	void Chipset::Frame()

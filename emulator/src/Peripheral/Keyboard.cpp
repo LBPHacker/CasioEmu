@@ -123,6 +123,8 @@ namespace casioemu
 
 	void Keyboard::Frame()
 	{
+		require_frame = false;
+
 		SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 		for (auto &button : buttons)
 		{
@@ -177,10 +179,13 @@ namespace casioemu
 				else
 					button.pressed = true;
 
+				require_frame = true;
+
 				if (button.type == Button::BT_POWER && button.pressed && !old_pressed)
 					emulator.chipset.Reset();
 				if (button.type == Button::BT_BUTTON && button.pressed != old_pressed)
 					RecalculateGhost();
+
 				break;
 			}
 		}
@@ -289,7 +294,10 @@ namespace casioemu
 			}
 		}
 		if (had_effect)
+		{
+			require_frame = true;
 			RecalculateGhost();
+		}
 	}
 
 	// * TODO: map computer keyboard keys to virtual buttons
