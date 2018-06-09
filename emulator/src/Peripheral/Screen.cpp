@@ -37,6 +37,8 @@ namespace casioemu
 	    interface_texture = emulator.GetInterfaceTexture();
 		for (int ix = 0; ix != SPR_MAX; ++ix)
 			sprite_info[ix] = emulator.GetModelInfo(sprite_bitmap[ix].name);
+		
+		ink_colour = emulator.GetModelInfo("ink_colour");
 
 		screen_buffer = new uint8_t[0x0200];
 
@@ -107,7 +109,7 @@ namespace casioemu
 			return;
 		}
 
-		SDL_SetTextureColorMod(interface_texture, 30, 52, 90);
+		SDL_SetTextureColorMod(interface_texture, ink_colour.r, ink_colour.g, ink_colour.b);
 
 		if (enable_status)
 		{

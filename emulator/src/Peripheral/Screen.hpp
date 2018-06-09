@@ -4,6 +4,7 @@
 #include "Peripheral.hpp"
 #include "../Chipset/MMURegion.hpp"
 #include "../Data/SpriteInfo.hpp"
+#include "../Data/ColourInfo.hpp"
 
 namespace casioemu
 {
@@ -47,6 +48,7 @@ namespace casioemu
 
 		static SpriteBitmap sprite_bitmap[];
 		SpriteInfo sprite_info[SPR_MAX];
+		ColourInfo ink_colour;
 
 		/**
 		 * Similar to MMURegion::DefaultWrite, except this also set the

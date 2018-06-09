@@ -2,6 +2,7 @@
 
 #include "../Emulator.hpp"
 #include "SpriteInfo.hpp"
+#include "ColourInfo.hpp"
 
 namespace casioemu
 {
@@ -57,6 +58,25 @@ namespace casioemu
 
 		lua_pop(emulator.lua_state, 7);
 		return sprite_info;
+	}
+
+	ModelInfo::operator ColourInfo()
+	{
+		lua_geti(emulator.lua_state, LUA_REGISTRYINDEX, emulator.lua_model_ref);
+		if (lua_getfield(emulator.lua_state, -1, key.c_str()) != LUA_TTABLE)
+			PANIC("key '%s' is not a table\n", key.c_str());
+
+		for (int ix = 0; ix != 3; ++ix)
+			if (lua_geti(emulator.lua_state, -1 - ix, ix + 1) != LUA_TNUMBER)
+				PANIC("key '%s'[%i] is not a number\n", key.c_str(), ix + 1);
+
+		ColourInfo colour_info;
+		colour_info.r = lua_tointeger(emulator.lua_state, -3);
+		colour_info.g = lua_tointeger(emulator.lua_state, -2);
+		colour_info.b = lua_tointeger(emulator.lua_state, -1);
+
+		lua_pop(emulator.lua_state, 4);
+		return colour_info;
 	}
 }
 
