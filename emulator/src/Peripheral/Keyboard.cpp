@@ -13,6 +13,7 @@ namespace casioemu
 	void Keyboard::Initialise()
 	{
 	    renderer = emulator.GetRenderer();
+	    require_frame = true;
 
 		interrupt_source.Setup(5, emulator);
 
