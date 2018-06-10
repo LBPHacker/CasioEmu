@@ -65,6 +65,17 @@ local function get_real_pc()
 end
 
 function break_at(addr)
+	if not next(break_targets) then
+		-- if it's initially empty and later non-empty
+		emu:post_tick(function()
+			local real_pc = get_real_pc()
+			if break_targets[real_pc] then
+				printf("********** breakpoint reached at %05X **********", real_pc)
+				emu:set_paused(true)
+			end
+		end)
+	end
+
 	if not addr then
 		addr = get_real_pc()
 	end
@@ -76,19 +87,14 @@ function unbreak_at(addr)
 		addr = get_real_pc()
 	end
 	break_targets[addr] = nil
+	if not next(break_targets) then
+		emu:post_tick(nil)
+	end
 end
 
 function cont()
 	emu:set_paused(false)
 end
-
-emu:post_tick(function()
-	local real_pc = get_real_pc()
-	if break_targets[real_pc] then
-		printf("********** breakpoint reached at %05X **********", real_pc)
-		emu:set_paused(true)
-	end
-end)
 
 function printf(...)
 	print(string.format(...))
