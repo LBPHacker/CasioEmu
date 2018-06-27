@@ -113,7 +113,7 @@ end
 
 local handle = io.open(args_assoc.input, "rb")
 if not handle then
-	panic("Failed to open \"%i\"", args_assoc.input)
+	panic("Failed to open \"%s\"", args_assoc.input)
 end
 local binary_source = handle:read("*a")
 handle:close()
@@ -992,7 +992,7 @@ if args_assoc.names then
 	print("Renaming labels...")
 	local handle = io.open(args_assoc.names, "r")
 	if not handle then
-		panic("Failed to open \"%i\"", args_assoc.names)
+		panic("Failed to open \"%s\"", args_assoc.names)
 	end
 	local name_content = handle:read("*a")
 	handle:close()
@@ -1032,7 +1032,7 @@ end
 print("Writing disassembly...")
 local handle = io.open(args_assoc.output, "w")
 if not handle then
-	panic("Failed to open \"%i\"", args_assoc.output)
+	panic("Failed to open \"%s\"", args_assoc.output)
 end
 do
 	local last_instr
