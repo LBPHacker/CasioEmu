@@ -39,6 +39,7 @@ namespace casioemu
 			sprite_info[ix] = emulator.GetModelInfo(sprite_bitmap[ix].name);
 		
 		ink_colour = emulator.GetModelInfo("ink_colour");
+		require_frame = true;
 
 		screen_buffer = new uint8_t[0x0200];
 
