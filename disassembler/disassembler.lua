@@ -3,6 +3,14 @@
 if not bit then
 	bit = {}
 
+	local function normalize(r)
+		r = r % 0x100000000
+		if r >= 0x80000000 then
+			r = r - 0x100000000
+		end
+		return r
+	end
+
 	local function loopfunc(a, b, t, u)
 		a = a % 0x100000000
 		b = b % 0x100000000
@@ -22,7 +30,7 @@ if not bit then
 				r = r + v
 			end
 		end
-		return r
+		return normalize(r)
 	end
 
 	function bit.band(a, b)
@@ -38,11 +46,15 @@ if not bit then
 	end
 
 	function bit.lshift(a, b)
-		return (a * 2 ^ b) % 0x100000000
+		return normalize(a * 2 ^ b)
 	end
 
 	function bit.rshift(a, b)
-		return math.floor(a / 2 ^ b) % 0x100000000
+		return normalize(math.floor((a % 0x100000000) / 2 ^ b))
+	end
+
+	function bit.arshift(a, b) -- for completeness?
+		return math.floor(normalize(a) / 2 ^ b)
 	end
 end
 
@@ -101,7 +113,7 @@ end
 
 local handle = io.open(args_assoc.input, "rb")
 if not handle then
-	panic("Failed to open \"%i\"", args_assoc.input)
+	panic("Failed to open \"%s\"", args_assoc.input)
 end
 local binary_source = handle:read("*a")
 handle:close()
@@ -980,7 +992,7 @@ if args_assoc.names then
 	print("Renaming labels...")
 	local handle = io.open(args_assoc.names, "r")
 	if not handle then
-		panic("Failed to open \"%i\"", args_assoc.names)
+		panic("Failed to open \"%s\"", args_assoc.names)
 	end
 	local name_content = handle:read("*a")
 	handle:close()
@@ -1020,7 +1032,7 @@ end
 print("Writing disassembly...")
 local handle = io.open(args_assoc.output, "w")
 if not handle then
-	panic("Failed to open \"%i\"", args_assoc.output)
+	panic("Failed to open \"%s\"", args_assoc.output)
 end
 do
 	local last_instr
