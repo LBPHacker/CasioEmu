@@ -329,7 +329,6 @@ do
 
 	for ix, def in next, instruction_source do
 		local repr, imask, has_imm, addr = def[1], def[2], def[3], def[4]
-		local dsr_instr = repr[1] == "dsr"
 		local function instruction_emit_func(instruction, imm16)
 			local params_out = {}
 			for ix = 2, #repr do
@@ -1072,7 +1071,7 @@ do
 					if instr.params[ix][2] == "im" and instr.params[ix][1] >= 0xFF00 then
 						instr.params[ix][1] = instr.params[ix][1] - 0x10000
 					end
-					out_body[#out_body] = formats[instr.params[ix][2]]:format(instr.params[ix][1], instr) .. out_body[#out_body]
+					out_body[#out_body] = out_body[#out_body]:gsub("%[", formats[instr.params[ix][2]]:format(instr.params[ix][1], instr) .. "[")
 				else
 					local paramtbl = {}
 					if instr.offsetable == ix then
