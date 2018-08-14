@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 #include <forward_list>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 namespace casioemu
 {

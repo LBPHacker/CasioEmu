@@ -5,8 +5,8 @@
 #include "../Emulator.hpp"
 #include "../Chipset/Chipset.hpp"
 
-#include <lua5.3/lua.hpp>
-#include <SDL2/SDL.h>
+#include <lua.hpp>
+#include <SDL.h>
 
 namespace casioemu
 {

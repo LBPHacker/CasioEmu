@@ -4,13 +4,12 @@ DEPDIR := dep
 BINDIR := bin
 OBJDIR := obj
 
-LIBSTOLINK :=
 INCLUDEDIRS :=
 
 CXX ?= g++
 CCEXT ?= cpp
-CCFLAGS ?= -g -std=c++11 -Wall -Wextra -Werror -pedantic
-CCLINK ?= $(LIBSTOLINK) -lSDL2 -lSDL2_image -llua5.3 -lpthread
+CCFLAGS ?= -g -std=c++11 -Wall -Wextra -Werror -pedantic `pkg-config --cflags SDL2_image` `pkg-config --cflags sdl2` `pkg-config --cflags lua53`
+CCLINK ?= -lpthread `pkg-config --libs SDL2_image` `pkg-config --libs sdl2` `pkg-config --libs lua53`
 
 FILES := $(shell find $(SRCDIR) -name *.$(CCEXT))
 
